@@ -7,7 +7,7 @@ if(LINUX)
   ADD_DEFINITIONS(--std=c++0x)
 endif()
 
-ADD_LIBRARY (femlib ${LIB_SRC})
+ADD_LIBRARY (femlib STATIC ${LIB_SRC} )
 INCLUDE_DIRECTORIES ("${PROJECT_SOURCE_DIR}/include")
 INCLUDE_DIRECTORIES ("${PROJECT_SOURCE_DIR}/../include")
-SET(LIB_TYPE STATIC)	#set the lib type
+	#set the lib type

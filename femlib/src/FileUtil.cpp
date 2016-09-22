@@ -34,6 +34,24 @@ void FileUtilIn::close()
   in.close();
 }
 
+std::string
+loadTxtFile(std::string filename)
+{
+  std::ifstream t(filename);
+  if (!t.good()) {
+    std::cout << "Cannot open " << filename << "\n";
+  }
+  std::string str;
+
+  t.seekg(0, std::ios::end);
+  str.reserve(t.tellg());
+  t.seekg(0, std::ios::beg);
+
+  str.assign((std::istreambuf_iterator<char>(t)),
+    std::istreambuf_iterator<char>());
+  return str;
+}
+
 void
 FileUtilIn::readFArr(std::vector<float> & arr)
 {
@@ -145,11 +163,11 @@ sequenceFilename(int seq, const char * dirname,
 
 std::string directoryName(std::string filename)
 {
-  char * fullpath;
   std::string path;
   std::string s;
 
 #ifdef __linux__
+  char * fullpath;
   char resolve[PATH_MAX];
   fullpath = realpath(filename.c_str(), resolve);
   if (fullpath == NULL){

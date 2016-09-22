@@ -3,7 +3,9 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <streambuf>
 #include "Eigen/Dense"
+
 class FileUtilIn
 {
 public:
@@ -43,4 +45,8 @@ sequenceFilename(int seq, const char * dirname = 0,
                  int padding = 0, const char * suffix= 0);
 
 std::string directoryName(std::string filename);
+
+//load whole plain text ascii file into string
+std::string loadTxtFile(std::string filename);
+
 #endif // FILEUTIL_HPP
