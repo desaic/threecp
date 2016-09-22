@@ -37,7 +37,7 @@ void Render::drawElementMesh(ElementMesh * em)
 
 void Render::drawTrigMesh(TrigMesh * m)
 {
-  glDrawArrays(GL_TRIANGLES, 0, m->t.size());
+  glDrawArrays(GL_TRIANGLES, 0, 3*m->t.size());
 }
 
 void Render::initTrigBuffers(TrigMesh * m)
@@ -89,6 +89,7 @@ void Render::init()
 {
   const char * vs_pointer = vs_string.data();
   const char * fs_pointer = fs_string.data();
+
   std::cout<<"glsl version"<<glGetString(GL_SHADING_LANGUAGE_VERSION)<<"\n";
   vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertex_shader, 1, &vs_pointer, NULL);

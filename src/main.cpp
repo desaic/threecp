@@ -27,6 +27,7 @@ int main(void)
     exit(EXIT_FAILURE);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_DEPTH_BITS, 32);
   window = glfwCreateWindow(800, 800, "Simple example", NULL, NULL);
   if (!window)
   {
@@ -56,8 +57,8 @@ int main(void)
     glfwGetFramebufferSize(window, &width, &height);
     glClearColor(0.2, 0.2, 0.7, 1.0);
     glViewport(0, 0, width, height);
-    glClear(GL_COLOR_BUFFER_BIT);
-    
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
     gui->drawContent();
     gui->screen->drawWidgets();
     glfwSwapBuffers(window);
