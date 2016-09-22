@@ -26,7 +26,7 @@ int main(void)
   if (!glfwInit())
     exit(EXIT_FAILURE);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   window = glfwCreateWindow(800, 800, "Simple example", NULL, NULL);
   if (!window)
   {
@@ -45,6 +45,8 @@ int main(void)
   TrigMesh * tm = new TrigMesh();
   FileUtilIn in("data/bunny_sr.obj");
   tm->load(in.in);
+  in.close();
+  render->trigs.push_back(tm);
   render->loadShader("glsl/vs.txt", "glsl/fs.txt");
   render->init();
 
