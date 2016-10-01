@@ -148,10 +148,10 @@ void TrigMesh::read_obj(std::istream & f)
   char bslash='/',space=' ';
   std::string tok;
   while(1) {
-    std::getline(f,line);
-    if(f.eof()) {
+    if (f.eof()) {
       break;
     }
+    std::getline(f,line);
     if(line == "#end"){
       break;
     }
@@ -381,10 +381,11 @@ void TrigMesh::rescale()
 void TrigMesh::compute_norm()
 {
   n.resize(v.size(), Vector3s::Zero());
+  std::fill(n.begin(), n.end(), Vector3s::Zero());
   for(unsigned int ii=0; ii<t.size(); ii++) {
     Vector3s a = v[t[ii][1]] - v[t[ii][0]];
     Vector3s b = v[t[ii][2]] - v[t[ii][0]];
-    a.cross(b);
+    b = a.cross(b);
     b.normalize();
     for(int jj=0; jj<3; jj++) {
       n[t[ii][jj]]+=b;

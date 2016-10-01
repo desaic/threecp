@@ -44,7 +44,7 @@ int main(void)
   gui->init();
   gui->screen->childAt(0)->setPosition(Eigen::Vector2i(10, 10));
   TrigMesh * tm = new TrigMesh();
-  FileUtilIn in("data/bunny_sr.obj");
+  FileUtilIn in("data/triangle.obj");
   tm->load(in.in);
   in.close();
   render->trigs.push_back(tm);
