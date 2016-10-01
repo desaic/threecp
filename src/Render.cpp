@@ -27,8 +27,8 @@ void Render::drawContent()
   axis << 0, 1, 0;
   float angle = (float)glfwGetTime();
   Eigen::AngleAxis<float> rot((float)glfwGetTime(), axis);
-  //m.block(0, 0, 3, 3) = rot.matrix();
-  //m(3, 3) = 1;
+  m.block(0, 0, 3, 3) = rot.matrix();
+  m(3, 3) = 1;
   v = mat4x4_look_at(eye, at, up);
   p = mat4x4_perspective(3.14f/3, ratio, 0.1f, 20);
   mvp = p*v*m;
@@ -82,6 +82,7 @@ void Render::initTrigBuffers(TrigMesh * m)
       for (int k = 0; k < dim; k++) {
         v[cnt] = (GLfloat)m->v[m->t[i][j]][k];
         n[cnt] = (GLfloat)normal[k];
+        //n[cnt] = (GLfloat)m->n[m->t[i][j]][k];
         cnt++;
       }
     }
