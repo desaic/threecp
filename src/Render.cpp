@@ -1,13 +1,19 @@
 #include "Render.hpp"
 #include <nanogui\nanogui.h>
-#include "linmath.h"
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 #include "FileUtil.hpp"
 #include "ElementMesh.hpp"
 #include "TrigMesh.hpp"
+#include "linmath.h"
 
 void Render::drawContent()
 {
-  mat4x4 m, p, mvp;
+  Eigen::Matrix4f m, v, p, mvp, mvit;
+  Eigen::Vector3f eye, at, up;
+  eye << 0, 0.2, 2;
+  at << 0, 0, -2;
+  up << 0, 1, 0;
   float ratio = 1.0f;
   if (window) {
     int width, height;
@@ -15,12 +21,20 @@ void Render::drawContent()
     ratio = width / (float)height;
   }
 
-  mat4x4_identity(m);
-  mat4x4_rotate_Y(m, m, (float)glfwGetTime());
-  mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-  mat4x4_mul(mvp, p, m);
+  m = Eigen::Matrix4f::Identity();
+  Eigen::Vector3f axis;
+  axis << 0, 1, 0;
+  float angle = (float)glfwGetTime();
+  Eigen::AngleAxis<float> rot((float)glfwGetTime(), axis);
+  m.block(0, 0, 3, 3) = rot.matrix();
+  m(3, 3) = 1;
+  v = mat4x4_look_at(eye, at, up);
+  p = mat4x4_perspective(3.14f/3, ratio, 0.1f, 20);
+  mvp = p*v*m;
+  mvit = (v*m).inverse().transpose();
   glUseProgram(program);
-  glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
+  glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (const GLfloat*)mvp.data());
+  glUniformMatrix4fv(mvit_loc, 1, GL_FALSE, (const GLfloat*)mvit.data());
   for (size_t i = 0; i < meshes.size(); i++) {
     drawElementMesh(meshes[i]);
   }
@@ -37,36 +51,53 @@ void Render::drawElementMesh(ElementMesh * em)
 
 void Render::drawTrigMesh(TrigMesh * m)
 {
-  glDrawArrays(GL_TRIANGLES, 0, 3*m->t.size());
+  glDrawArrays(GL_TRIANGLES, 0, (GLsizei)(3*m->t.size()));
 }
 
 void Render::initTrigBuffers(TrigMesh * m)
 {
   ShaderBuffer buf;
+  int nBuf = 2;
   glGenVertexArrays(1, &buf.vao);
   glBindVertexArray(buf.vao);
-  glGenBuffers(1, buf.b);
-  //copy vertices
-  glBindBuffer(GL_ARRAY_BUFFER, buf.b[0]);
+  buf.b.resize(nBuf);
+  glGenBuffers(nBuf, buf.b.data());
+
   //use index buffer instead maybe.
   int dim = 3;
   int nFloat = 3* dim * (int)m->t.size();
   GLfloat * v = new GLfloat[nFloat];
+  GLfloat * n = new GLfloat[nFloat];
   int cnt= 0;
   for (size_t i = 0; i < m->t.size(); i++) {
+    Vector3s trigv[3];
+    for (int j = 0; j < 3; j++) {
+      trigv[j] = m->v[m->t[i][j]];
+    }
+    Vector3s normal = (trigv[1] - trigv[0]).cross(trigv[2] - trigv[0]);
+    normal.normalize();
     for (int j = 0; j < 3; j++) {
       for (int k = 0; k < dim; k++) {
-        v[cnt] = m->v[m->t[i][j]][k];
+        v[cnt] = (GLfloat)m->v[m->t[i][j]][k];
+        n[cnt] = (GLfloat)normal[k];
         cnt++;
       }
     }
   }
+  glBindBuffer(GL_ARRAY_BUFFER, buf.b[0]);
   glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), v, GL_DYNAMIC_DRAW);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, buf.b[1]);
+  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), n, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
   buffers.push_back(buf);
 
   delete[]v;
+  delete[]n;
 }
 
 void checkShaderError(GLuint shader)
@@ -110,8 +141,8 @@ void Render::init()
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
 
-  mvp_location = glGetUniformLocation(program, "MVP");
-
+  mvp_loc = glGetUniformLocation(program, "MVP");
+  mvit_loc = glGetUniformLocation(program, "MVIT");
   for (size_t i = 0; i < trigs.size(); i++) {
     initTrigBuffers(trigs[i]);
   }
