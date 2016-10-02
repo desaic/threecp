@@ -135,6 +135,13 @@ void FramebufferSizeCallback(GLFWwindow *, int width, int height) {
   }
 }
 
+void ViewerGUI::ButtonCBOpen()
+{
+  std::string filename = file_dialog(
+  { { "obj", "Wavefront plane text mesh" } }, false);
+  std::cout << "File dialog result: " << filename << std::endl;
+}
+
 void ViewerGUI::init()
 {
   if (!window) {
@@ -147,7 +154,12 @@ void ViewerGUI::init()
   bool enabled = true;
   FormHelper *gui = new FormHelper(screen);
   ref<Window> nanoguiWindow = gui->addWindow(Eigen::Vector2i(100, 100), "Form helper example");
-  
+
+  gui->addGroup("File IO");
+  std::function<void()> f_ButtonOpen = std::bind(&ViewerGUI::ButtonCBOpen, this);
+  Button * b = gui->addButton("Open", f_ButtonOpen);
+  b->setTooltip("Open a mesh file.");
+
   gui->addGroup("Basic types");
   gui->addVariable("bool", bvar)->setTooltip("Test tooltip.");
   gui->addVariable("string", strval);
@@ -160,9 +172,6 @@ void ViewerGUI::init()
   gui->addGroup("Complex types");
   gui->addVariable("Enumeration", enumval, enabled)->setItems({ "Item 1", "Item 2", "Item 3" });
   gui->addVariable("Color", colval);
-
-  gui->addGroup("Other widgets");
-  gui->addButton("A button", []() { std::cout << "Button pressed." << std::endl; })->setTooltip("Testing a much longer tooltip, that will wrap around to new lines multiple times.");;
 
   screen->setVisible(true);
   screen->performLayout();

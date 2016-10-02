@@ -36,6 +36,7 @@ public:
     }
     render->drawContent();
   }
+  void ButtonCBOpen();
   nanogui::Screen *screen;
   GLFWwindow* window;
   Render * render;
