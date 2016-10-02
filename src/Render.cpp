@@ -155,3 +155,41 @@ void Render::loadShader(std::string vsfile, std::string fsfile)
   vs_string = loadTxtFile(vsfile);
   fs_string = loadTxtFile(fsfile);
 }
+
+void Render::moveCamera(float dt)
+{
+  Eigen::Vector3f viewDir = cam.at - cam.eye;
+  Eigen::Vector3f up = cam.up;
+  Eigen::Vector3f right = viewDir.cross(up);
+  right[1] = 0;
+  viewDir[1] = 0;
+
+  if (cam.keyhold[0]) {
+    cam.eye += viewDir * dt * camSpeed;
+    cam.at += viewDir * dt * camSpeed;
+  }
+  if (cam.keyhold[1]) {
+    cam.eye -= viewDir * dt * camSpeed;
+    cam.at -= viewDir * dt * camSpeed;
+  }
+  if (cam.keyhold[2]) {
+    cam.eye += right * dt * camSpeed;
+    cam.at += right * dt * camSpeed;
+  }
+  if (cam.keyhold[3]) {
+    cam.eye -= right * dt * camSpeed;
+    cam.at -= right * dt * camSpeed;
+  }
+  if (cam.keyhold[4]) {
+    if (cam.eye[1]<2) {
+      cam.eye[1] += dt * camSpeed;
+      cam.at[1] += dt * camSpeed;
+    }
+  }
+  if (cam.keyhold[5]) {
+    if (cam.eye[1]>-0.5) {
+      cam.eye[1] -= dt * camSpeed;
+      cam.at[1] -= dt * camSpeed;
+    }
+  }
+}

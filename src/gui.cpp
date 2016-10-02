@@ -10,24 +10,100 @@ ViewerGUI * viewergui;
 void CursorPosCallback(GLFWwindow * window, double x, double y) 
 {
   bool ret = viewergui->screen->cursorPosCallbackEvent(x, y);
+  Render * r = viewergui->render;
   if (!ret) {
     //std::cout << "did not move on widgets.\n";
+    if (r->captureMouse) {
+      int width, height;
+      glfwGetFramebufferSize(window, &width, &height);
+      double dx = x - r->xpos0;
+      double dy = -y + r->ypos0;
+      r->xpos0 = x;
+      r->ypos0 = y;
+      //    std::cout<<dx<<" "<<dy<<"\n";
+      //    glfwSetCursorPos(window,width/2, height/2);
+      r->cam.angle_xz += (float)(dx * r->xRotSpeed);
+      r->cam.angle_y -= (float)(dy * r->yRotSpeed);
+      r->cam.update();
+    }
   }
 }
 
-void MouseButtonCallback(GLFWwindow *, int button, int action, int modifiers)
+void MouseButtonCallback(GLFWwindow * window, int button, int action, int modifiers)
 {
   bool ret = viewergui ->screen->mouseButtonCallbackEvent(button, action, modifiers);
   if (!ret) {
     //std::cout << "did not click on widgets.\n";
+    switch (button) {
+    case GLFW_MOUSE_BUTTON_LEFT:
+      if (action == GLFW_PRESS) {
+        viewergui->render->captureMouse = true;
+        double xpos, ypos;
+        glfwGetCursorPos(window,&xpos, &ypos);
+        viewergui->render->xpos0 = xpos;
+        viewergui->render->ypos0 = ypos;
+      }
+      else if (action == GLFW_RELEASE) {
+        viewergui->render->captureMouse = false;
+      }
+      break;
+    }
   }
 }
 
-void KeyCallback(GLFWwindow *, int key, int scancode, int action, int mods)
+void KeyCallback(GLFWwindow * window, int key, int scancode, int action, int mods)
 {
+  Render * r = viewergui->render;
   bool ret = viewergui->screen->keyCallbackEvent(key, scancode, action, mods);
   if (!ret) {
     //std::cout << "no key on widgets.\n";
+    if (action == GLFW_PRESS) {
+      switch (key) {
+      case GLFW_KEY_W:
+        r->cam.keyhold[0] = true;
+        break;
+      case GLFW_KEY_S:
+        r->cam.keyhold[1] = true;
+        break;
+      case GLFW_KEY_A:
+        r->cam.keyhold[2] = true;
+        break;
+      case GLFW_KEY_D:
+        r->cam.keyhold[3] = true;
+        break;
+      case GLFW_KEY_R:
+        r->cam.keyhold[4] = true;
+        break;
+      case GLFW_KEY_F:
+        r->cam.keyhold[5] = true;
+        break;
+      }
+    }
+    else if (action == GLFW_RELEASE) {
+      switch (key) {
+      case GLFW_KEY_ESCAPE:
+        glfwSetWindowShouldClose(window, GL_TRUE);
+        break;
+      case GLFW_KEY_W:
+        r->cam.keyhold[0] = false;
+        break;
+      case GLFW_KEY_S:
+        r->cam.keyhold[1] = false;
+        break;
+      case GLFW_KEY_A:
+        r->cam.keyhold[2] = false;
+        break;
+      case GLFW_KEY_D:
+        r->cam.keyhold[3] = false;
+        break;
+      case GLFW_KEY_R:
+        r->cam.keyhold[4] = false;
+        break;
+      case GLFW_KEY_F:
+        r->cam.keyhold[5] = false;
+        break;
+      }
+    }
   }
 }
 

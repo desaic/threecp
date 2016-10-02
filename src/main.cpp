@@ -50,7 +50,8 @@ int main(void)
   render->trigs.push_back(tm);
   render->loadShader("glsl/vs.txt", "glsl/fs.txt");
   render->init();
-
+  double t0, t1;
+  t0 = glfwGetTime();
   while (!glfwWindowShouldClose(window))
   {
     int width, height;
@@ -62,6 +63,12 @@ int main(void)
     gui->drawContent();
     gui->screen->drawWidgets();
     glfwSwapBuffers(window);
+    
+    t1 = glfwGetTime();
+    double dt = t1 - t0;
+    t0 = t1;
+    gui->render->moveCamera(dt);
+
     glfwPollEvents();
   }
   glfwDestroyWindow(window);
