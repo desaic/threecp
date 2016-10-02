@@ -169,6 +169,9 @@ static inline void mat4x4_translate(mat4x4 T, float x, float y, float z)
 	T[3][1] = y;
 	T[3][2] = z;
 }
+
+void mat4x4_translate_in_place(Eigen::Matrix4f & M, float x, float y, float z);
+
 static inline void mat4x4_translate_in_place(mat4x4 M, float x, float y, float z)
 {
 	vec4 t = {x, y, z, 0};
@@ -179,6 +182,7 @@ static inline void mat4x4_translate_in_place(mat4x4 M, float x, float y, float z
 		M[3][i] += vec4_mul_inner(r, t);
 	}
 }
+
 static inline void mat4x4_from_vec3_mul_outer(mat4x4 M, vec3 a, vec3 b)
 {
 	int i, j;
@@ -354,6 +358,7 @@ static inline void mat4x4_ortho(mat4x4 M, float l, float r, float b, float t, fl
 	M[3][2] = -(f+n)/(f-n);
 	M[3][3] = 1.f;
 }
+
 static inline void mat4x4_perspective(mat4x4 m, float y_fov, float aspect, float n, float f)
 {
 	/* NOTE: Degrees are an unhandy unit to work with.
@@ -380,6 +385,11 @@ static inline void mat4x4_perspective(mat4x4 m, float y_fov, float aspect, float
 	m[3][2] = -((2.f * f * n) / (f - n));
 	m[3][3] = 0.f;
 }
+
+Eigen::Matrix4f mat4x4_perspective(float y_fov, float aspect, float n, float f);
+
+Eigen::Matrix4f mat4x4_look_at(Eigen::Vector3f eye, Eigen::Vector3f center, Eigen::Vector3f up);
+
 static inline void mat4x4_look_at(mat4x4 m, vec3 eye, vec3 center, vec3 up)
 {
 	/* Adapted from Android's OpenGL Matrix.java.                        */

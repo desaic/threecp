@@ -1,5 +1,6 @@
 #pragma once
 #include "FileUtil.hpp"
+#include "Camera.hpp"
 #include <nanogui\nanogui.h>
 
 class ElementMesh;
@@ -24,10 +25,12 @@ public:
   ///mvp model view projection.
   ///mvit model view inverse transpose.
   GLint mvp_loc, mvit_loc, light_loc;
+  Camera cam;
+  double xpos0, ypos0;
+  bool captureMouse;
 
   GLFWwindow * window;
   std::string vs_string, fs_string;
-
   std::vector<ElementMesh * > meshes;
   std::vector<TrigMesh * > trigs;
   std::vector<ShaderBuffer> buffers;

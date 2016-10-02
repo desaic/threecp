@@ -10,26 +10,23 @@
 void Render::drawContent()
 {
   Eigen::Matrix4f m, v, p, mvp, mvit;
-  Eigen::Vector3f eye, at, up;
-  eye << 0, 0, 2;
-  at << 0, 0, -2;
-  up << 0, 1, 0;
   float ratio = 1.0f;
   if (window) {
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     ratio = width / (float)height;
   }
-
+  
   m = Eigen::Matrix4f::Identity();
   v = Eigen::Matrix4f::Identity();
   Eigen::Vector3f axis;
   axis << 0, 1, 0;
   float angle = (float)glfwGetTime();
   Eigen::AngleAxis<float> rot((float)glfwGetTime(), axis);
-  m.block(0, 0, 3, 3) = rot.matrix();
-  m(3, 3) = 1;
-  v = mat4x4_look_at(eye, at, up);
+  //m.block(0, 0, 3, 3) = rot.matrix();
+  //m(3, 3) = 1;
+  cam.update();
+  v = mat4x4_look_at(cam.eye, cam.at, cam.up);
   p = mat4x4_perspective(3.14f/3, ratio, 0.1f, 20);
   mvp = p*v*m;
   mvit = (v*m).inverse().transpose();
@@ -123,7 +120,9 @@ void Render::init()
 {
   const char * vs_pointer = vs_string.data();
   const char * fs_pointer = fs_string.data();
-
+  cam.eye << 0, 0.5, 2;
+  cam.at << 0, 0, -2;
+  cam.update();
   std::cout<<"glsl version"<<glGetString(GL_SHADING_LANGUAGE_VERSION)<<"\n";
   vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertex_shader, 1, &vs_pointer, NULL);
