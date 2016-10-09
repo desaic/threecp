@@ -31,7 +31,7 @@ static const int sw[8][3] =
  { 1, 1, 1}
 };
 
-const int faces[6][4]={
+const int hexFaces[6][4]={
 		{ 0, 1, 3, 2 },
 		{ 4, 6, 7, 5 },
 		{ 0, 4, 5, 1 },

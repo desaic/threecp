@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include "FileUtil.hpp"
+#include "ElementHex.hpp"
 #include "ElementMesh.hpp"
 #include "TrigMesh.hpp"
 #include "linmath.h"
@@ -34,17 +35,18 @@ void Render::drawContent()
   glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (const GLfloat*)mvp.data());
   glUniformMatrix4fv(mvit_loc, 1, GL_FALSE, (const GLfloat*)mvit.data());
   for (size_t i = 0; i < meshes.size(); i++) {
+    glBindVertexArray(buffers[i].vao);
     drawElementMesh(meshes[i]);
   }
   for (size_t i = 0; i < trigs.size(); i++) {
-    glBindVertexArray(buffers[i].vao);
+    glBindVertexArray(buffers[i+meshes.size()].vao);
     drawTrigMesh(trigs[i]);
   }
 }
 
 void Render::drawElementMesh(ElementMesh * em)
 {
-  
+  glDrawArrays(GL_TRIANGLES, 0, (GLsizei)(36 * em->e.size()));
 }
 
 void Render::drawTrigMesh(TrigMesh * m)
@@ -55,7 +57,7 @@ void Render::drawTrigMesh(TrigMesh * m)
 void Render::initTrigBuffers(TrigMesh * m)
 {
   ShaderBuffer buf;
-  int nBuf = 2;
+  int nBuf = 3;
   glGenVertexArrays(1, &buf.vao);
   glBindVertexArray(buf.vao);
   buf.b.resize(nBuf);
@@ -66,6 +68,7 @@ void Render::initTrigBuffers(TrigMesh * m)
   int nFloat = 3* dim * (int)m->t.size();
   GLfloat * v = new GLfloat[nFloat];
   GLfloat * n = new GLfloat[nFloat];
+  GLfloat * color = new GLfloat[nFloat];
   int cnt= 0;
   m->compute_norm();
   for (size_t i = 0; i < m->t.size(); i++) {
@@ -79,6 +82,7 @@ void Render::initTrigBuffers(TrigMesh * m)
       for (int k = 0; k < dim; k++) {
         v[cnt] = (GLfloat)m->v[m->t[i][j]][k];
         n[cnt] = (GLfloat)normal[k];
+        color[cnt] = (GLfloat)0.7;
         //n[cnt] = (GLfloat)m->n[m->t[i][j]][k];
         cnt++;
       }
@@ -94,10 +98,95 @@ void Render::initTrigBuffers(TrigMesh * m)
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+  glBindBuffer(GL_ARRAY_BUFFER, buf.b[2]);
+  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), color, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
   buffers.push_back(buf);
 
   delete[]v;
   delete[]n;
+  delete[]color;
+}
+
+int addHexEle(ElementMesh * e, int ei, 
+  GLfloat * v, GLfloat * n, GLfloat * color)
+{
+  int nQuad = 6;
+  int nTrig = 2;
+  int quadT[2][3] = { {0,1,2},{0,2,3} };
+  int cnt = 0;
+  int dim = 3;
+  for (int qi = 0; qi < nQuad; qi++) {
+    for (int ti = 0; ti < nTrig; ti++) {
+      Vector3s trigv[3];
+      int vidx[3];
+      for (int j = 0; j < 3; j++) {
+        Element*ele = e->e[ei];
+        vidx[j] = hexFaces[qi][quadT[ti][j]];
+        trigv[j] = e->X[ele->at(vidx[j])];
+      }
+      Vector3s normal = (trigv[1] - trigv[0]).cross(trigv[2] - trigv[0]);
+      normal.normalize();
+      for (int j = 0; j < 3; j++) {
+        for (int k = 0; k < dim; k++) {
+          v[cnt] = (GLfloat)trigv[j][k];
+          n[cnt] = (GLfloat)normal[k];
+          color[cnt] = (GLfloat)e->color[ei];
+          //n[cnt] = (GLfloat)m->n[m->t[i][j]][k];
+          cnt++;
+        }
+      }
+
+    }
+  }
+  return cnt;
+}
+
+void Render::initEleBuffers(ElementMesh * e)
+{
+  ShaderBuffer buf;
+  int nBuf = 3;
+  glGenVertexArrays(1, &buf.vao);
+  glBindVertexArray(buf.vao);
+  buf.b.resize(nBuf);
+  glGenBuffers(nBuf, buf.b.data());
+
+  //use index buffer instead maybe.
+  int dim = 3;
+  int nTrig = 12;
+  int nFloat = nTrig * 3 * dim * (int)e->e.size();
+  GLfloat * v = new GLfloat[nFloat];
+  GLfloat * n = new GLfloat[nFloat];
+  GLfloat * color = new GLfloat[nFloat];
+  int cnt = 0;
+
+  for (size_t i = 0; i < e->e.size(); i++) {
+    int ret = addHexEle(e, i, v+cnt, n+cnt, color+cnt);
+    cnt += ret;
+  }
+
+  glBindBuffer(GL_ARRAY_BUFFER, buf.b[0]);
+  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), v, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, buf.b[1]);
+  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), n, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, buf.b[2]);
+  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), color, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  buffers.push_back(buf);
+
+  delete[]v;
+  delete[]n;
+  delete[]color;
 }
 
 void checkShaderError(GLuint shader)
@@ -145,6 +234,9 @@ void Render::init()
 
   mvp_loc = glGetUniformLocation(program, "MVP");
   mvit_loc = glGetUniformLocation(program, "MVIT");
+  for (size_t i = 0; i < meshes.size(); i++) {
+    initEleBuffers(meshes[i]);
+  }
   for (size_t i = 0; i < trigs.size(); i++) {
     initTrigBuffers(trigs[i]);
   }

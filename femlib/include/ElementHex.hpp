@@ -5,7 +5,7 @@
 #include <Eigen/Dense>
 
 extern const int facen[][3];
-extern const int faces[][4];
+extern const int hexFaces[6][4];
 
 class ElementHex:public Element
 {

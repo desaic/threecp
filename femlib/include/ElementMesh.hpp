@@ -69,6 +69,8 @@ public:
   ///@brief material for each element
   std::vector<int>me;
   
+  std::vector<double> color;
+
   ///@brief per element depth
   std::vector<double> depth;
 

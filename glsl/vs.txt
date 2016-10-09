@@ -4,8 +4,10 @@ uniform mat4 MVP;
 uniform mat4 MVIT;
 layout(location = 0) in vec3 vPos;
 layout(location = 1) in vec3 vNormal;
+layout(location = 2) in vec3 vcolor;
 smooth out vec3 pos;
 smooth out vec3 normal;
+smooth out vec3 fcolor;
 void main()
 {
     
@@ -14,6 +16,7 @@ void main()
 	
 	normal = normalize(n.xyz);
 	vec4 p = MVP * vec4(vPos, 1.0);
+	fcolor = vcolor;
 	gl_Position = p;
 	pos = p.xyz;
 };

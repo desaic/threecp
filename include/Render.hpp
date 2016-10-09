@@ -45,6 +45,7 @@ public:
   void drawTrigMesh(TrigMesh * m);
   void init();
   void initTrigBuffers(TrigMesh * m);
+  void initEleBuffers(ElementMesh * e);
   /// \brief loads files into vs_string and fs_string.
   void loadShader(std::string vsfile, std::string fsfile);
 
