@@ -87,6 +87,8 @@ void addmul(std::vector<T> & dst, float f, const std::vector<T> & src)
   }
 }
 
+int gridToLinearIdx(int ix, int iy, int iz, const std::vector<int> & gridSize);
+
 template<typename T>
 void setVal(std::vector<T> & a, const std::vector<int> & c, const T & val)
 {

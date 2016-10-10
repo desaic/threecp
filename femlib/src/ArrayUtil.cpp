@@ -46,3 +46,8 @@ double infNorm(const std::vector<double> & a){
   }
   return n;
 }
+
+int gridToLinearIdx(int ix, int iy, int iz, const std::vector<int> & gridSize)
+{
+  return ix * gridSize[1] * gridSize[2] + iy * gridSize[2] + iz;
+}
