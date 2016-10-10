@@ -1,0 +1,4 @@
+#trigmeshes list 1
+#data/bunny_sr.obj
+voxfiles list 1
+data/g28.bin
