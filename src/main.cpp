@@ -68,8 +68,8 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     std::vector<int> gridSize;
     std::vector<double> s;
     ElementRegGrid * grid = new ElementRegGrid();
-    //loadBinaryStructure(voxFiles[i], s, gridSize);
-    loadBinDouble(voxFiles[i], s, gridSize);
+    loadBinaryStructure(voxFiles[i], s, gridSize);
+    //loadBinDouble(voxFiles[i], s, gridSize);
     assignGridMat(s, gridSize, grid);
     //grid->resize(1, 1, 1);
     render->meshes.push_back(grid);

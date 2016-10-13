@@ -209,8 +209,9 @@ void Render::init()
 {
   const char * vs_pointer = vs_string.data();
   const char * fs_pointer = fs_string.data();
-  cam.eye << 0, 0.5, 2;
-  cam.at << 0, 0, -2;
+  cam.angle_xz = 0;
+  cam.eye << 0, 0.5, -2;
+  cam.at << 0, 0, 2;
   cam.update();
   std::cout<<"glsl version"<<glGetString(GL_SHADING_LANGUAGE_VERSION)<<"\n";
   vertex_shader = glCreateShader(GL_VERTEX_SHADER);
