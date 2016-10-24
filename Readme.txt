@@ -1,0 +1,1 @@
+In Cmake, choose to not build shared libraries for nanogui.
