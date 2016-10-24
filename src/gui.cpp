@@ -138,8 +138,14 @@ void FramebufferSizeCallback(GLFWwindow *, int width, int height) {
 void ViewerGUI::ButtonCBOpen()
 {
   std::string filename = file_dialog(
-  { { "obj", "Wavefront plane text mesh" } }, false);
+  { { "bin", "Binary voxel data file" } }, false);
   std::cout << "File dialog result: " << filename << std::endl;
+  Render * r = render;
+  if (r->emEvent.size() == 0) {
+    return;
+  }
+  r->emEvent[0].eventType = Render::OPEN_FILE_EVENT;
+  r->emEvent[0].filename = filename;
 }
 
 void ViewerGUI::init()
@@ -159,20 +165,19 @@ void ViewerGUI::init()
   std::function<void()> f_ButtonOpen = std::bind(&ViewerGUI::ButtonCBOpen, this);
   Button * b = gui->addButton("Open", f_ButtonOpen);
   b->setTooltip("Open a mesh file.");
-
+  
   gui->addGroup("Basic types");
   gui->addVariable("bool", bvar)->setTooltip("Test tooltip.");
   gui->addVariable("string", strval);
 
   gui->addGroup("Validating fields");
-  gui->addVariable("int", ivar)->setSpinnable(true);
+  gui->addVariable("Slice", ivar)->setSpinnable(true);
   gui->addVariable("float", fvar)->setTooltip("Test.");
   gui->addVariable("double", dvar)->setSpinnable(true);
 
   gui->addGroup("Complex types");
   gui->addVariable("Enumeration", enumval, enabled)->setItems({ "Item 1", "Item 2", "Item 3" });
   gui->addVariable("Color", colval);
-
   screen->setVisible(true);
   screen->performLayout();
   nanoguiWindow->center();

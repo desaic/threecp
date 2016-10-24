@@ -4,6 +4,7 @@
 #include "ElementHex.hpp"
 #include "ElementMeshUtil.hpp"
 #include "ElementMesh.hpp"
+#include "ElementRegGrid.hpp"
 #include "FileUtil.hpp"
 #include "TrigMesh.hpp"
 
@@ -579,4 +580,25 @@ bool hitWall(float wallDist, const std::vector<Eigen::Vector3d> & x, int dim, in
     }
   }
   return intersect;
+}
+
+void assignGridMat(const std::vector<double> & s,
+  const std::vector<int> & gridSize, ElementRegGrid * grid)
+{
+  double thresh = 5e-2;
+  grid->resize(gridSize[0], gridSize[1], gridSize[1]);
+  std::vector<Element* > e;
+  std::vector<double> color;
+  for (size_t i = 0; i < s.size(); i++) {
+    if (s[i] < thresh) {
+      delete grid->e[i];
+    }
+    else {
+      e.push_back(grid->e[i]);
+      color.push_back(s[i]);
+    }
+  }
+  grid->color = color;
+  grid->e = e;
+  grid->rmEmptyVert();
 }

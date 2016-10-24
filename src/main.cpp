@@ -6,6 +6,7 @@
 #include "ConfigFile.hpp"
 #include "Element.hpp"
 #include "ElementRegGrid.hpp"
+#include "ElementMeshUtil.hpp"
 #include "linmath.h"
 #include "gui.hpp"
 #include "TrigMesh.hpp"
@@ -20,27 +21,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GLFW_TRUE);
-}
-
-void assignGridMat(const std::vector<double> & s,
-  const std::vector<int> & gridSize, ElementRegGrid * grid)
-{
-  double thresh = 5e-2;
-  grid->resize(gridSize[0], gridSize[1], gridSize[1]);
-  std::vector<Element* > e;
-  std::vector<double> color;
-  for (size_t i = 0; i < s.size(); i++) {
-    if (s[i] < thresh) {
-      delete grid->e[i];
-    }
-    else {
-      e.push_back(grid->e[i]);
-      color.push_back(s[i]);
-    }
-  }
-  grid->color = color;
-  grid->e = e;
-  grid->rmEmptyVert();
 }
 
 void readRenderConfig(const ConfigFile & conf, Render * render)
@@ -69,9 +49,14 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     std::vector<double> s;
     ElementRegGrid * grid = new ElementRegGrid();
     loadBinaryStructure(voxFiles[i], s, gridSize);
+    //s = mirrorOrthoStructure(s, gridSize);
     //loadBinDouble(voxFiles[i], s, gridSize);
     assignGridMat(s, gridSize, grid);
-    //grid->resize(1, 1, 1);
+    //TrigMesh tm;
+    //hexToTrigMesh(grid, &tm);
+    //std::string outfile = voxFiles[i] + ".obj";
+    //tm.save_obj(outfile.c_str());
+
     render->meshes.push_back(grid);
     in.close();
   }

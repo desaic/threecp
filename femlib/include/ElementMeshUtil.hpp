@@ -3,6 +3,8 @@
 
 #include "ElementMesh.hpp"
 
+class ElementRegGrid;
+
 extern int HexFaces[6][4];
 
 ///@brief save abaqus format.
@@ -34,5 +36,8 @@ void applyFrame(ElementMesh * em, const Eigen::Vector3d & O,
   const Eigen::Matrix3d & Frame);
 
 bool hitWall(float wallDist, const std::vector<Eigen::Vector3d> & x, int dim, int sign);
+
+void assignGridMat(const std::vector<double> & s,
+  const std::vector<int> & gridSize, ElementRegGrid * grid);
 
 #endif

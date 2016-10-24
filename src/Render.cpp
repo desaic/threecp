@@ -5,8 +5,38 @@
 #include "FileUtil.hpp"
 #include "ElementHex.hpp"
 #include "ElementMesh.hpp"
+#include "ElementMeshUtil.hpp"
+#include "ElementRegGrid.hpp"
 #include "TrigMesh.hpp"
 #include "linmath.h"
+#include "VoxelIO.hpp"
+
+void Render::elementMeshEvent(int idx)
+{
+  int eventType = emEvent[idx].eventType;
+  if (eventType != NO_EVENT) {
+    emEvent[idx].eventType = NO_EVENT;
+  }
+  else {
+    return ;
+  }
+  std::vector<double> s;
+  std::vector<int> gridSize;
+  ElementRegGrid * em = 0;
+  switch (eventType) {
+  case OPEN_FILE_EVENT:
+    em = new ElementRegGrid();
+    loadBinaryStructure(emEvent[idx].filename, s, gridSize);
+    assignGridMat(s, gridSize, em);
+    delete meshes[idx];
+    meshes[idx] = em;
+    copyEleBuffers(idx);
+    break;
+  case MOVE_SLICE_EVENT:
+    break;
+  }
+
+}
 
 void Render::drawContent()
 {
@@ -35,6 +65,7 @@ void Render::drawContent()
   glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (const GLfloat*)mvp.data());
   glUniformMatrix4fv(mvit_loc, 1, GL_FALSE, (const GLfloat*)mvit.data());
   for (size_t i = 0; i < meshes.size(); i++) {
+    elementMeshEvent(i);
     glBindVertexArray(buffers[i].vao);
     drawElementMesh(meshes[i]);
   }
@@ -144,14 +175,10 @@ int addHexEle(ElementMesh * e, int ei,
   return cnt;
 }
 
-void Render::initEleBuffers(ElementMesh * e)
+void Render::copyEleBuffers(int idx)
 {
-  ShaderBuffer buf;
-  int nBuf = 3;
-  glGenVertexArrays(1, &buf.vao);
-  glBindVertexArray(buf.vao);
-  buf.b.resize(nBuf);
-  glGenBuffers(nBuf, buf.b.data());
+  ShaderBuffer buf = buffers[idx];
+  ElementMesh * e = meshes[idx];
 
   //use index buffer instead maybe.
   int dim = 3;
@@ -163,7 +190,7 @@ void Render::initEleBuffers(ElementMesh * e)
   int cnt = 0;
 
   for (size_t i = 0; i < e->e.size(); i++) {
-    int ret = addHexEle(e, i, v+cnt, n+cnt, color+cnt);
+    int ret = addHexEle(e, i, v + cnt, n + cnt, color + cnt);
     cnt += ret;
   }
 
@@ -181,12 +208,23 @@ void Render::initEleBuffers(ElementMesh * e)
   glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), color, GL_DYNAMIC_DRAW);
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-  buffers.push_back(buf);
-
+    
   delete[]v;
   delete[]n;
   delete[]color;
+}
+
+void Render::initEleBuffers(int idx)
+{
+  ElementMesh* e = meshes[idx];
+  ShaderBuffer buf;
+  int nBuf = 3;
+  glGenVertexArrays(1, &buf.vao);
+  glBindVertexArray(buf.vao);
+  buf.b.resize(nBuf);
+  glGenBuffers(nBuf, buf.b.data());
+  buffers.push_back(buf);
+  copyEleBuffers(idx);
 }
 
 void checkShaderError(GLuint shader)
@@ -235,8 +273,10 @@ void Render::init()
 
   mvp_loc = glGetUniformLocation(program, "MVP");
   mvit_loc = glGetUniformLocation(program, "MVIT");
+  
+  emEvent.resize(meshes.size());
   for (size_t i = 0; i < meshes.size(); i++) {
-    initEleBuffers(meshes[i]);
+    initEleBuffers(i);
   }
   for (size_t i = 0; i < trigs.size(); i++) {
     initTrigBuffers(trigs[i]);

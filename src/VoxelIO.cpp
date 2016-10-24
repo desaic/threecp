@@ -46,7 +46,7 @@ void loadBinaryStructure(const std::string & filename,
 }
 
 
-std::vector<double> mirrorOrthoStructure(const std::vector<double> &s, const std::vector<int> & gridSize)
+std::vector<double> mirrorOrthoStructure(const std::vector<double> &s, std::vector<int> & gridSize)
 {
   std::vector<int> newSize = gridSize;
   int nEle = 1;
@@ -76,6 +76,7 @@ std::vector<double> mirrorOrthoStructure(const std::vector<double> &s, const std
       }
     }
   }
+  gridSize = newSize;
   return t;
 }
 

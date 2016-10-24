@@ -24,3 +24,6 @@ void saveBinaryStructure(const std::string & filename,
 void saveBinaryStructure(const std::string & filename,
   const std::vector<double> & s,
   const std::vector<int> & gridSize);
+
+std::vector<double>
+mirrorOrthoStructure(const std::vector<double> &s, std::vector<int> & gridSize);
