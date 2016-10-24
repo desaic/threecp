@@ -171,7 +171,10 @@ void ViewerGUI::init()
   gui->addVariable("string", strval);
 
   gui->addGroup("Validating fields");
-  gui->addVariable("Slice", ivar)->setSpinnable(true);
+  IntBox<int> * sliceWidget = gui->addVariable("Slice", slice);
+  sliceWidget->setSpinnable(true);
+  sliceWidget->setMinMaxValues(0, 64);
+
   gui->addVariable("float", fvar)->setTooltip("Test.");
   gui->addVariable("double", dvar)->setSpinnable(true);
 

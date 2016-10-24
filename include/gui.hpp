@@ -14,14 +14,14 @@ public:
   };
   
   bool bvar;
-  int ivar;
+  int slice0, slice;
   double dvar;
   float fvar;
   nanogui::Color colval;
   test_enum enumval;
   std::string strval;
 
-  ViewerGUI() : bvar(true), ivar(12345), 
+  ViewerGUI() : bvar(true), slice0(0), slice(0), 
     dvar(3.14), fvar(3.14f),
     colval(0.5f, 0.5f, 0.7f, 1.f) ,
     enumval(Item2),  strval("string"),
@@ -33,6 +33,13 @@ public:
   void drawContent() {
     if (!render) {
       return;
+    }
+    if (slice0 != slice) {
+      slice0 = slice;
+      if (render->meshes.size() > 0) {
+        render->emEvent[0].eventType = Render::MOVE_SLICE_EVENT;
+        render->emEvent[0].slice = slice;
+      }
     }
     render->drawContent();
   }

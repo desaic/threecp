@@ -20,6 +20,7 @@ struct EMEvent
 {
   int eventType;
   std::string filename;
+  int slice;
   EMEvent() :eventType(0) {}
 };
 

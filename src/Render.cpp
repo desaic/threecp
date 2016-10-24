@@ -33,6 +33,7 @@ void Render::elementMeshEvent(int idx)
     copyEleBuffers(idx);
     break;
   case MOVE_SLICE_EVENT:
+    copyEleBuffers(idx);
     break;
   }
 
@@ -179,18 +180,36 @@ void Render::copyEleBuffers(int idx)
 {
   ShaderBuffer buf = buffers[idx];
   ElementMesh * e = meshes[idx];
+  int slice = emEvent[idx].slice;
+  int gridres = 32;
+  double dx = 1.0 / gridres;
 
+  std::vector<int> eidx;
+  for (size_t i = 0; i < e->e.size(); i++) {
+    Eigen::Vector3d center(0, 0, 0);
+    int nV = (int)e->e[i]->nV();
+    for (int j = 0; j < nV; j++) {
+      center += e->X[e->e[i]->at(j)];
+    }
+    center = (1.0 / nV) * center;
+    if (center[2] >= slice* dx) {
+      eidx.push_back(i);
+    }
+  }
+  if (eidx.size() == 0) {
+    return;
+  }
   //use index buffer instead maybe.
   int dim = 3;
   int nTrig = 12;
-  int nFloat = nTrig * 3 * dim * (int)e->e.size();
+  int nFloat = nTrig * 3 * dim * (int)eidx.size();
   GLfloat * v = new GLfloat[nFloat];
   GLfloat * n = new GLfloat[nFloat];
   GLfloat * color = new GLfloat[nFloat];
   int cnt = 0;
 
-  for (size_t i = 0; i < e->e.size(); i++) {
-    int ret = addHexEle(e, i, v + cnt, n + cnt, color + cnt);
+  for (size_t i = 0; i < (int)eidx.size(); i++) {
+    int ret = addHexEle(e, eidx[i], v + cnt, n + cnt, color + cnt);
     cnt += ret;
   }
 
