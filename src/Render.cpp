@@ -42,8 +42,12 @@ void Render::elementMeshEvent(int idx)
   ElementRegGrid * em = 0;
   switch (eventType) {
   case OPEN_FILE_EVENT:
-    em = new ElementRegGrid();
+    
     loadBinaryStructure(emEvent[idx].filename, s, gridSize);
+    if (gridSize.size() == 0) {
+      break;
+    }
+    em = new ElementRegGrid();
     assignGridMat(s, gridSize, em);
     updateGrid(s, gridSize);
     delete meshes[idx];
@@ -213,6 +217,7 @@ void Render::copyEleBuffers(int idx)
   ShaderBuffer buf = buffers[idx];
   ElementMesh * e = meshes[idx];
   int slice = emEvent[idx].slice;
+  grid.lb[2] = slice;
   int gridres = 32;
   double dx = 1.0 / gridres;
 
@@ -293,7 +298,7 @@ void copyRayBuffers(ShaderBuffer & buf, const Ray & r)
   x = y.cross(z);
   x.normalize();
   float dz = 2;
-  float dx = 0.005;
+  float dx = 0.001;
   verts[0] = o - dx * x - dx * y;
   verts[1] = o - dx * x - dx * y + dz * z;
   verts[2] = o - dx * x + dx * y;

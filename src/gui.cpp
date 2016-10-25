@@ -145,6 +145,9 @@ void ViewerGUI::ButtonCBOpen()
   if (r->emEvent.size() == 0) {
     return;
   }
+  if (filename.size() == 0) {
+    return;
+  }
   r->emEvent[0].eventType = Render::OPEN_FILE_EVENT;
   r->emEvent[0].filename = filename;
 }

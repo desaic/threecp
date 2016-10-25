@@ -18,94 +18,65 @@ int rayGridIntersect(const Ray & r0, const RegGrid & grid)
     return -1;
   }
 
-  // Bresenham3D
   Eigen::Vector3f v1 = r.o + r.d*tmin;
   Eigen::Vector3f v2 = r.o + r.d*tmax;
+  v2 = v2 - v1;
   int point[3];
-  int dx[3];
   for (int i = 0; i < 3; i++) {
     point[i] = (int)(v1[i] / grid.dx[i]);
-    dx[i] = (int)(v2[i] / grid.dx[i]) - point[i];
   }
 
-  int i, l, m, n, x_inc, y_inc, z_inc, err_1, err_2, dx2, dy2, dz2;
+  int stepX = (v2[0]< 0) ? -1 : 1;
+  int stepY = (v2[1]< 0) ? -1 : 1;
+  int stepZ = (v2[2] < 0) ? -1 : 1;
 
-  x_inc = (dx[0]< 0) ? -1 : 1;
-  l = abs(dx[0]);
-  y_inc = (dx[1]< 0) ? -1 : 1;
-  m = abs(dx[1]);
-  z_inc = (dx[2] < 0) ? -1 : 1;
-  n = abs(dx[2]);
-  dx2 = l << 1;
-  dy2 = m << 1;
-  dz2 = n << 1;
-
-  if ((l >= m) && (l >= n)) {
-    err_1 = dy2 - l;
-    err_2 = dz2 - l;
-    for (i = 0; i < l; i++) {
-      int val = grid(point[0], point[1], point[2]);
-      if (val >= 0) {
-        return val;
-      }
-      if (err_1 > 0) {
-        point[1] += y_inc;
-        err_1 -= dx2;
-      }
-      if (err_2 > 0) {
-        point[2] += z_inc;
-        err_2 -= dx2;
-      }
-      err_1 += dy2;
-      err_2 += dz2;
-      point[0] += x_inc;
-    }
+  int X = point[0];
+  int Y = point[1];
+  int Z = point[2];
+  grid.clamp(X, Y, Z);
+  float tMaxX = ((point[0] + stepX) * grid.dx[0] - v1[0]) / r.d[0];
+  float tMaxY = ((point[1] + stepY) * grid.dx[1] - v1[1]) / r.d[1];
+  float tMaxZ = ((point[2] + stepZ) * grid.dx[2] - v1[2]) / r.d[2];
+  float tDeltaX = std::abs(grid.dx[0] / r.d[0]);
+  float tDeltaY = std::abs(grid.dx[1] / r.d[1]);
+  float tDeltaZ = std::abs(grid.dx[2] / r.d[2]);
+  int val = grid(X, Y, Z);
+  if (val >= 0) {
+    return val;
   }
-  else if ((m >= l) && (m >= n)) {
-    err_1 = dx2 - m;
-    err_2 = dz2 - m;
-    for (i = 0; i < m; i++) {
-      int val = grid(point[0], point[1], point[2]);
-      if (val >= 0) {
-        return val;
+  do {
+    if (tMaxX < tMaxY) {
+      if (tMaxX < tMaxZ) {
+        X = X + stepX;
+        if (X >= grid.gridSize[0] || X<0)
+          break; /* outside grid */
+        tMaxX = tMaxX + tDeltaX;
       }
-      if (err_1 > 0) {
-        point[0] += x_inc;
-        err_1 -= dy2;
+      else {
+        Z = Z + stepZ;
+        if (Z >= grid.gridSize[2] || Z<0)
+          break;
+        tMaxZ = tMaxZ + tDeltaZ;
       }
-      if (err_2 > 0) {
-        point[2] += z_inc;
-        err_2 -= dy2;
-      }
-      err_1 += dx2;
-      err_2 += dz2;
-      point[1] += y_inc;
     }
-  }
-  else {
-    err_1 = dy2 - n;
-    err_2 = dx2 - n;
-    for (i = 0; i < n; i++) {
-      int val = grid(point[0], point[1], point[2]);
-      if (val >= 0) {
-        return val;
+    else {
+      if (tMaxY < tMaxZ) {
+        Y = Y + stepY;
+        if (Y >= grid.gridSize[1] || Y<0)
+          break;
+        tMaxY = tMaxY + tDeltaY;
       }
-      if (err_1 > 0) {
-        point[1] += y_inc;
-        err_1 -= dz2;
+      else {
+        Z = Z + stepZ;
+        if (Z >= grid.gridSize[2] || Z<0)
+          break;
+        tMaxZ = tMaxZ + tDeltaZ;
       }
-      if (err_2 > 0) {
-        point[0] += x_inc;
-        err_2 -= dz2;
-      }
-      err_1 += dy2;
-      err_2 += dx2;
-      point[2] += z_inc;
     }
-  }
-  int val = grid(point[0], point[1], point[2]);
+    val = grid(X,Y,Z);
+  } while (val < 0);
+  
   return val;
-
 }
 
 bool rayBoxIntersect(const Ray & r, const Eigen::Vector3f * bounds,
