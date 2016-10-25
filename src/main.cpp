@@ -52,6 +52,9 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     //s = mirrorOrthoStructure(s, gridSize);
     //loadBinDouble(voxFiles[i], s, gridSize);
     assignGridMat(s, gridSize, grid);
+    if (i == 0) {
+      render->updateGrid(s, gridSize);
+    }
     //TrigMesh tm;
     //hexToTrigMesh(grid, &tm);
     //std::string outfile = voxFiles[i] + ".obj";
@@ -60,6 +63,8 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     render->meshes.push_back(grid);
     in.close();
   }
+
+
 
 }
 

@@ -11,6 +11,23 @@
 #include "linmath.h"
 #include "VoxelIO.hpp"
 
+void Render::updateGrid(const std::vector<double> & s, const std::vector<int> & gridSize)
+{
+  grid.allocate(gridSize[0], gridSize[1], gridSize[2]);
+  int cnt = 0;
+  float thresh = 0.5;
+  for (int j = 0; j < s.size(); j++) {
+    if (s[j] < thresh) {
+      grid.s[j] = -1;
+    }
+    else {
+      grid.s[j] = cnt;
+      cnt++;
+    }
+  }
+  
+}
+
 void Render::elementMeshEvent(int idx)
 {
   int eventType = emEvent[idx].eventType;
@@ -28,6 +45,7 @@ void Render::elementMeshEvent(int idx)
     em = new ElementRegGrid();
     loadBinaryStructure(emEvent[idx].filename, s, gridSize);
     assignGridMat(s, gridSize, em);
+    updateGrid(s, gridSize);
     delete meshes[idx];
     meshes[idx] = em;
     copyEleBuffers(idx);
@@ -447,5 +465,9 @@ void Render::pick(double xpos, double ypos)
   Eigen::Matrix4f vmat = mat4x4_look_at(cam.eye, cam.at, cam.up);
   pickEvent.r.d = (vmat.transpose() * d).block(0,0,3,1);
   pickEvent.r.d.normalize();
+  if (grid.gridSize[0] > 0) {
+    int id = rayGridIntersect(pickEvent.r, grid);
+    std::cout << "Pick " << id << "\n";
+  }
   copyRayBuffers(pickEvent.buf, pickEvent.r);
 }
