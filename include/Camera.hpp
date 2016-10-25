@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <Eigen/Dense>
+#include "linmath.h"
 
 const float MAXY = 0.49f * 3.141593f;
 const float MAXXZ = 2 * 3.141593f;
@@ -25,6 +26,7 @@ struct Camera {
     for (int ii = 0; ii<NKEYS; ii++) {
       keyhold[ii] = false;
     }
+    p = mat4x4_perspective(3.14f / 3, 1, 0.1f, 20);
   }
 
   void update() {
@@ -48,12 +50,15 @@ struct Camera {
     viewDir = cos(angle_y)*viewDir + sin(angle_y)*yaxis;
     at = eye + viewDir;
     up = right.cross(viewDir);
+    p = mat4x4_perspective(3.14f / 3, ratio, 0.1f, 20);
   }
   float angle_xz, angle_y;
   Eigen::Vector3f eye;
   Eigen::Vector3f at;
   Eigen::Vector3f up;
-
+  Eigen::Matrix4f p;
+  //perspective ratio;
+  float ratio;
   //if keys are held
   //W S A D R F
   bool keyhold[NKEYS];

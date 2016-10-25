@@ -41,27 +41,22 @@ void Render::elementMeshEvent(int idx)
 
 void Render::drawContent()
 {
-  Eigen::Matrix4f m, v, p, mvp, mvit;
-  float ratio = 1.0f;
+  Eigen::Matrix4f v, mvp, mvit;
   if (window) {
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-    ratio = width / (float)height;
+    cam.ratio = width / (float)height;
   }
   
-  m = Eigen::Matrix4f::Identity();
   v = Eigen::Matrix4f::Identity();
   Eigen::Vector3f axis;
   axis << 0, 1, 0;
   float angle = (float)glfwGetTime();
   Eigen::AngleAxis<float> rot((float)glfwGetTime(), axis);
-  //m.block(0, 0, 3, 3) = rot.matrix();
-  //m(3, 3) = 1;
   cam.update();
   v = mat4x4_look_at(cam.eye, cam.at, cam.up);
-  p = mat4x4_perspective(3.14f/3, ratio, 0.1f, 20);
-  mvp = p*v*m;
-  mvit = (v*m).inverse().transpose();
+  mvp = cam.p*v;
+  mvit = v.inverse().transpose();
   glUseProgram(program);
   glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (const GLfloat*)mvp.data());
   glUniformMatrix4fv(mvit_loc, 1, GL_FALSE, (const GLfloat*)mvit.data());
@@ -73,6 +68,10 @@ void Render::drawContent()
   for (size_t i = 0; i < trigs.size(); i++) {
     glBindVertexArray(buffers[i+meshes.size()].vao);
     drawTrigMesh(trigs[i]);
+  }
+  if (pickEvent.picked) {
+    glBindVertexArray(pickEvent.buf.vao);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
   }
 }
 
@@ -142,22 +141,23 @@ void Render::initTrigBuffers(TrigMesh * m)
   delete[]color;
 }
 
-int addHexEle(ElementMesh * e, int ei, 
-  GLfloat * v, GLfloat * n, GLfloat * color)
+
+int addCube(const std::vector<Eigen::Vector3d> & verts,
+  const Eigen::Vector3f & color, 
+  GLfloat * v, GLfloat * n, GLfloat * c)
 {
+  int cnt = 0;
   int nQuad = 6;
   int nTrig = 2;
-  int quadT[2][3] = { {0,1,2},{0,2,3} };
-  int cnt = 0;
   int dim = 3;
+  int quadT[2][3] = { { 0,1,2 },{ 0,2,3 } };
   for (int qi = 0; qi < nQuad; qi++) {
     for (int ti = 0; ti < nTrig; ti++) {
       Vector3s trigv[3];
       int vidx[3];
       for (int j = 0; j < 3; j++) {
-        Element*ele = e->e[ei];
         vidx[j] = hexFaces[qi][quadT[ti][j]];
-        trigv[j] = e->X[ele->at(vidx[j])];
+        trigv[j] = verts[vidx[j]];
       }
       Vector3s normal = (trigv[1] - trigv[0]).cross(trigv[2] - trigv[0]);
       normal.normalize();
@@ -165,14 +165,28 @@ int addHexEle(ElementMesh * e, int ei,
         for (int k = 0; k < dim; k++) {
           v[cnt] = (GLfloat)trigv[j][k];
           n[cnt] = (GLfloat)normal[k];
-          color[cnt] = (GLfloat)e->color[ei];
-          //n[cnt] = (GLfloat)m->n[m->t[i][j]][k];
+          c[cnt] = (GLfloat)color[k];
           cnt++;
         }
       }
 
     }
   }
+  return cnt;
+}
+
+int addHexEle(ElementMesh * e, int ei, 
+  GLfloat * v, GLfloat * n, GLfloat * c)
+{
+  int cnt = 0;
+  int dim = 3;
+  Eigen::Vector3f color;
+  color << e->color[ei], e->color[ei], e->color[ei];
+  std::vector<Eigen::Vector3d> verts(e->e[ei]->nV());
+  for (int i = 0; i < e->e[ei]->nV(); i++) {
+    verts[i]=e->X[e->e[ei]->at(i)];
+  }
+  cnt = addCube(verts, color, v, n, c);
   return cnt;
 }
 
@@ -212,7 +226,7 @@ void Render::copyEleBuffers(int idx)
     int ret = addHexEle(e, eidx[i], v + cnt, n + cnt, color + cnt);
     cnt += ret;
   }
-
+  glBindVertexArray(buf.vao);
   glBindBuffer(GL_ARRAY_BUFFER, buf.b[0]);
   glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), v, GL_DYNAMIC_DRAW);
   glEnableVertexAttribArray(0);
@@ -246,6 +260,74 @@ void Render::initEleBuffers(int idx)
   copyEleBuffers(idx);
 }
 
+void copyRayBuffers(ShaderBuffer & buf, const Ray & r)
+{
+  std::vector < Eigen::Vector3d> verts(8);
+
+  Eigen::Vector3d x(1, 0, 0);
+  if (std::abs(r.d[0]) > 0.9) {
+    x << 0, 0, 1;
+  }
+  Eigen::Vector3d z = r.d.cast<double>();
+  Eigen::Vector3d y = z.cross(x);
+  Eigen::Vector3d o = r.o.cast<double>();
+  y.normalize();
+  x = y.cross(z);
+  x.normalize();
+  float dz = 2;
+  float dx = 0.005;
+  verts[0] = o - dx * x - dx * y;
+  verts[1] = o - dx * x - dx * y + dz * z;
+  verts[2] = o - dx * x + dx * y;
+  verts[3] = o - dx * x + dx * y + dz * z;
+  verts[4] = o + dx * x - dx * y;
+  verts[5] = o + dx * x - dx * y + dz * z;
+  verts[6] = o + dx * x + dx * y;
+  verts[7] = o + dx * x + dx * y + dz * z;
+
+  Eigen::Vector3f color;
+  color << 0.8, 0.7, 0.7;
+  int nTrig = 12;
+  int dim = 3;
+  int nFloat = nTrig * 3 * dim;
+  GLfloat * v = new GLfloat[nFloat];
+  GLfloat * n = new GLfloat[nFloat];
+  GLfloat * c = new GLfloat[nFloat];
+
+  int cnt = addCube(verts, color, v, n, c);
+  glBindVertexArray(buf.vao);
+  glBindBuffer(GL_ARRAY_BUFFER, buf.b[0]);
+  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), v, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, buf.b[1]);
+  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), n, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, buf.b[2]);
+  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), c, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  delete[]v;
+  delete[]n;
+  delete[]c;
+}
+
+void Render::initRayBuffers()
+{
+  int nBuf = 3;
+  glGenVertexArrays(1, &pickEvent.buf.vao);
+  glBindVertexArray(pickEvent.buf.vao);
+  pickEvent.buf.b.resize(nBuf);
+  glGenBuffers(nBuf, pickEvent.buf.b.data());
+  pickEvent.r.o = Eigen::Vector3f(0, 0, 0);
+  pickEvent.r.d = Eigen::Vector3f(0, 0, 1);
+  copyRayBuffers(pickEvent.buf, pickEvent.r);
+}
+
 void checkShaderError(GLuint shader)
 {
   GLint success = 0;
@@ -255,7 +337,7 @@ void checkShaderError(GLuint shader)
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logSize);
     std::vector<GLchar> errorLog(logSize);
     glGetShaderInfoLog(shader, logSize, &logSize, &errorLog[0]);
-    std::cout << "Shader error " << shader << " " << errorLog.data()<<"\n";
+    std::cout << "Shader error " << shader << " " << errorLog.data() << "\n";
   }
   else {
     std::cout << "Shader " << shader << " compiled.\n";
@@ -300,6 +382,7 @@ void Render::init()
   for (size_t i = 0; i < trigs.size(); i++) {
     initTrigBuffers(trigs[i]);
   }
+  initRayBuffers();
 }
 
 void Render::loadShader(std::string vsfile, std::string fsfile)
@@ -344,4 +427,25 @@ void Render::moveCamera(float dt)
       cam.at[1] -= dt * camSpeed;
     }
   }
+}
+
+void Render::pick(double xpos, double ypos)
+{
+  int width=0, height=0;
+  if (window) {
+    glfwGetFramebufferSize(window, &width, &height);
+  }
+  else {
+    return;
+  }
+  pickEvent.picked = true;
+  Eigen::Vector4f d;
+  d << 2 * xpos / width -1, 1 - 2 * ypos / height, 1 , 1;
+  d = cam.p.inverse()*d;
+  pickEvent.r.o = cam.eye;
+  d[3] = 0;
+  Eigen::Matrix4f vmat = mat4x4_look_at(cam.eye, cam.at, cam.up);
+  pickEvent.r.d = (vmat.transpose() * d).block(0,0,3,1);
+  pickEvent.r.d.normalize();
+  copyRayBuffers(pickEvent.buf, pickEvent.r);
 }

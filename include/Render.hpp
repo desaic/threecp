@@ -24,6 +24,20 @@ struct EMEvent
   EMEvent() :eventType(0) {}
 };
 
+struct Ray
+{
+  Eigen::Vector3f o, d;
+};
+
+struct PickEvent
+{
+  //ray used for picking.
+  Ray r;
+  bool picked;
+  ShaderBuffer buf;
+  PickEvent() :picked(0) {}
+};
+
 class Render
 {
 public:
@@ -59,6 +73,8 @@ public:
   std::vector<TrigMesh * > trigs;
   std::vector<ShaderBuffer> buffers;
 
+  PickEvent pickEvent;
+
   void drawContent();
   void elementMeshEvent(int idx);
   void drawElementMesh(ElementMesh * em);
@@ -66,7 +82,11 @@ public:
   void init();
   void initTrigBuffers(TrigMesh * m);
   void initEleBuffers(int idx);
+  void initRayBuffers();
   void copyEleBuffers(int idx);
+
+  void pick(double xpos, double ypos);
+
   /// \brief loads files into vs_string and fs_string.
   void loadShader(std::string vsfile, std::string fsfile);
 

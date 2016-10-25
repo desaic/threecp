@@ -42,6 +42,7 @@ void MouseButtonCallback(GLFWwindow * window, int button, int action, int modifi
         glfwGetCursorPos(window,&xpos, &ypos);
         viewergui->render->xpos0 = xpos;
         viewergui->render->ypos0 = ypos;
+        viewergui->render->pick(xpos, ypos);
       }
       else if (action == GLFW_RELEASE) {
         viewergui->render->captureMouse = false;
