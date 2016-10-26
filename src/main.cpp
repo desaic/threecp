@@ -39,6 +39,7 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
   }
 
   std::vector<std::string> voxFiles = conf.getStringVector("voxfiles");
+  std::cout << "vox file " << voxFiles.size() << "\n";
   for (size_t i = 0; i < voxFiles.size(); i++) {
     FileUtilIn in;
     in.open(voxFiles[i]);
@@ -49,9 +50,11 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     std::vector<double> s;
     ElementRegGrid * grid = new ElementRegGrid();
     loadBinaryStructure(voxFiles[i], s, gridSize);
+    std::cout << "vox file " << voxFiles[i] << "\n";
     //s = mirrorOrthoStructure(s, gridSize);
     //loadBinDouble(voxFiles[i], s, gridSize);
     assignGridMat(s, gridSize, grid);
+    std::cout << "Grid size " << gridSize[0] << " " << gridSize[1] << " " << gridSize[2] << ".\n";
     if (i == 0) {
       render->updateGrid(s, gridSize);
     }

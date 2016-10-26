@@ -35,8 +35,8 @@ int rayGridIntersect(const Ray & r0, const RegGrid & grid)
   int Z = point[2];
   grid.clamp(X, Y, Z);
   float tMaxX = ((point[0] + (stepX + 1) / 2) * grid.dx[0] - v1[0]) / r.d[0];
-  float tMaxY = ((point[1] + (stepX + 1) / 2) * grid.dx[1] - v1[1]) / r.d[1];
-  float tMaxZ = ((point[2] + (stepX + 1) / 2) * grid.dx[2] - v1[2]) / r.d[2];
+  float tMaxY = ((point[1] + (stepY + 1) / 2) * grid.dx[1] - v1[1]) / r.d[1];
+  float tMaxZ = ((point[2] + (stepZ + 1) / 2) * grid.dx[2] - v1[2]) / r.d[2];
   float tDeltaX = std::abs(grid.dx[0] / r.d[0]);
   float tDeltaY = std::abs(grid.dx[1] / r.d[1]);
   float tDeltaZ = std::abs(grid.dx[2] / r.d[2]);
