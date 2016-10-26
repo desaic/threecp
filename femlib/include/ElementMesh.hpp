@@ -18,6 +18,9 @@ public:
   ///Make copies if needed.
   std::vector<Element*>e;
 
+  ///@brief label for each element for custom use. not initialized .
+  std::vector<int> eLabel;
+
   ///@brief deformed positions in t-1. used by dynamics(unit m)
 //  std::vector<Vector3f>x0;
 
@@ -31,9 +34,6 @@ public:
   std::vector<Eigen::Vector3d>v;
   ///@brief unprojected v.
   std::vector<Eigen::Vector3d>vu;
-
-  ///unprojected velocity
-  //std::vector<Eigen::Vector3d>vu;
 
   ///@brief stiffness blocks.
   std::vector< std::map< int, Eigen::MatrixXd > > sblocks;
@@ -69,7 +69,7 @@ public:
   ///@brief material for each element
   std::vector<int>me;
   
-  std::vector<double> color;
+  std::vector<Eigen::Vector3f> color;
 
   ///@brief per element depth
   std::vector<double> depth;

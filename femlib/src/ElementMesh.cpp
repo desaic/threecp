@@ -223,7 +223,7 @@ void ElementMesh::initArrays()
   fixedDof = std::vector<int>(X.size()*dim);
   me = std::vector<int>(e.size(), 0);
   depth = std::vector<double>(e.size(), 1);
-  color = std::vector<double>(e.size(), 1);
+  color = std::vector<Eigen::Vector3f>(e.size(), Eigen::Vector3f::Ones());
   materialColor = std::vector<Eigen::Vector3f>(1, Eigen::Vector3f(0,0,1));
 }
 

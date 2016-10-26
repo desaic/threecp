@@ -58,7 +58,6 @@ void Render::elementMeshEvent(int idx)
     copyEleBuffers(idx);
     break;
   }
-
 }
 
 void Render::drawContent()
@@ -202,14 +201,30 @@ int addHexEle(ElementMesh * e, int ei,
 {
   int cnt = 0;
   int dim = 3;
-  Eigen::Vector3f color;
-  color << e->color[ei], e->color[ei], e->color[ei];
+  Eigen::Vector3f color = e->color[ei];
+  if (e->eLabel[ei] == 1) {
+    color = Eigen::Vector3f(0.5, 0.9, 0.5);
+  }
+  else if (e->eLabel[ei] == 2) {
+    color = Eigen::Vector3f(0.9, 0.5, 0.5);
+  }
   std::vector<Eigen::Vector3d> verts(e->e[ei]->nV());
   for (int i = 0; i < e->e[ei]->nV(); i++) {
     verts[i]=e->X[e->e[ei]->at(i)];
   }
   cnt = addCube(verts, color, v, n, c);
   return cnt;
+}
+
+Eigen::Vector3d eleCenter(const ElementMesh * e, int i)
+{
+  Eigen::Vector3d center(0, 0, 0);
+  int nV = (int)e->e[i]->nV();
+  for (int j = 0; j < nV; j++) {
+    center += e->X[e->e[i]->at(j)];
+  }
+  center = (1.0 / nV) * center;
+  return center;
 }
 
 void Render::copyEleBuffers(int idx)
@@ -223,12 +238,7 @@ void Render::copyEleBuffers(int idx)
 
   std::vector<int> eidx;
   for (size_t i = 0; i < e->e.size(); i++) {
-    Eigen::Vector3d center(0, 0, 0);
-    int nV = (int)e->e[i]->nV();
-    for (int j = 0; j < nV; j++) {
-      center += e->X[e->e[i]->at(j)];
-    }
-    center = (1.0 / nV) * center;
+    Eigen::Vector3d center = eleCenter(e, i);
     if (center[2] >= slice* dx) {
       eidx.push_back(i);
     }
@@ -470,9 +480,14 @@ void Render::pick(double xpos, double ypos)
   Eigen::Matrix4f vmat = mat4x4_look_at(cam.eye, cam.at, cam.up);
   pickEvent.r.d = (vmat.transpose() * d).block(0,0,3,1);
   pickEvent.r.d.normalize();
-  if (grid.gridSize[0] > 0) {
+  if (grid.gridSize[0] > 0 && meshes.size()>0) {
     int id = rayGridIntersect(pickEvent.r, grid);
-    std::cout << "Pick " << id << "\n";
+    if (id >= 0) {
+      meshes[0]->eLabel[id] = (meshes[0]->eLabel[id] + 1) % 3;
+      std::cout << "Pick " << id << "\n";
+      copyEleBuffers(0);
+    }
   }
+  
   copyRayBuffers(pickEvent.buf, pickEvent.r);
 }
