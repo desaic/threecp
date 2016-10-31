@@ -603,3 +603,14 @@ void assignGridMat(const std::vector<double> & s,
   grid->rmEmptyVert();
   grid->eLabel = std::vector<int>(grid->e.size(), 0);
 }
+
+Eigen::Vector3d eleCenter(const ElementMesh * e, int i)
+{
+  Eigen::Vector3d center(0, 0, 0);
+  int nV = (int)e->e[i]->nV();
+  for (int j = 0; j < nV; j++) {
+    center += e->X[e->e[i]->at(j)];
+  }
+  center = (1.0 / nV) * center;
+  return center;
+}

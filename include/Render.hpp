@@ -3,6 +3,7 @@
 #include "Camera.hpp"
 #include <nanogui\nanogui.h>
 #include "RegGrid.hpp"
+#include <set>
 
 class ElementMesh;
 class TrigMesh;
@@ -22,7 +23,7 @@ struct EMEvent
   int eventType;
   std::string filename;
   int slice;
-  EMEvent() :eventType(0) {}
+  EMEvent() :eventType(0), slice(0) {}
 };
 
 struct Ray
@@ -30,13 +31,24 @@ struct Ray
   Eigen::Vector3f o, d;
 };
 
+typedef std::map<std::pair<int, int>, int> EdgeMap;
+typedef std::set<int> VertexSet;
 struct PickEvent
 {
   //ray used for picking.
   Ray r;
   bool picked;
   ShaderBuffer buf;
-  PickEvent() :picked(0) {}
+  VertexSet verts;
+  EdgeMap edges;  
+  std::vector<int> selection;
+  //# of lines to render.
+  int nLines;
+  int graphIdx;
+  PickEvent() :picked(0), nLines(0), graphIdx(0) {
+    selection.resize(2, -1);
+  }
+  void saveGraph(ElementMesh * em, RegGrid * grid);
 };
 
 class Render
@@ -98,3 +110,4 @@ public:
 int rayGridIntersect(const Ray & r0, const RegGrid & grid);
 bool rayBoxIntersect(const Ray & r, const Eigen::Vector3f * bounds,
   float & tmin, float & tmax);
+void copyRayBuffers(ShaderBuffer & buf, PickEvent & event, ElementMesh * em);

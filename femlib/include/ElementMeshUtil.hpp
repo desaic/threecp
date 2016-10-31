@@ -39,5 +39,5 @@ bool hitWall(float wallDist, const std::vector<Eigen::Vector3d> & x, int dim, in
 
 void assignGridMat(const std::vector<double> & s,
   const std::vector<int> & gridSize, ElementRegGrid * grid);
-
+Eigen::Vector3d eleCenter(const ElementMesh * e, int i);
 #endif

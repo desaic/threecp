@@ -1,4 +1,6 @@
 #include "gui.hpp"
+#include "Render.hpp"
+#include "ElementMesh.hpp"
 #include <nanogui\window.h>
 #include <iostream>
 
@@ -152,6 +154,30 @@ void ViewerGUI::ButtonCBOpen()
   r->emEvent[0].filename = filename;
 }
 
+void ViewerGUI::ButtonCBSave()
+{
+  Render * r = render;
+  if (r->meshes.size() > 0 && 
+    (r->pickEvent.edges.size() > 0 
+      ||r->pickEvent.verts.size()>0) ){
+    r->pickEvent.saveGraph(r->meshes[0], &(r->grid) );
+  }
+}
+
+void ViewerGUI::ButtonCBClear()
+{
+  Render * r = render;
+  r->pickEvent.edges.clear();
+  r->pickEvent.verts.clear();
+  if (r->meshes.size() > 0) {
+    for (size_t i = 0; i < r->meshes[0]->eLabel.size(); i++) {
+      r->meshes[0]->eLabel[i] = 0;
+    }
+    r->copyEleBuffers(0);
+    copyRayBuffers(r->pickEvent.buf, r->pickEvent, r->meshes[0]);
+  }
+}
+
 void ViewerGUI::init()
 {
   if (!window) {
@@ -169,10 +195,17 @@ void ViewerGUI::init()
   std::function<void()> f_ButtonOpen = std::bind(&ViewerGUI::ButtonCBOpen, this);
   Button * b = gui->addButton("Open", f_ButtonOpen);
   b->setTooltip("Open a mesh file.");
-  
-  gui->addGroup("Basic types");
-  gui->addVariable("bool", bvar)->setTooltip("Test tooltip.");
-  gui->addVariable("string", strval);
+
+  std::function<void()> f_ButtonSave = std::bind(&ViewerGUI::ButtonCBSave, this);
+  Button * b1 = gui->addButton("Save", f_ButtonSave);
+  b->setTooltip("Save current graph.");
+
+  gui->addGroup("Graph");
+  std::function<void()> f_ButtonClear = std::bind(&ViewerGUI::ButtonCBClear, this);
+  Button * bc = gui->addButton("Clear", f_ButtonClear);
+  b->setTooltip("Clear selection.");
+  //gui->addVariable("bool", bvar)->setTooltip("Test tooltip.");
+  //gui->addVariable("string", strval);
 
   gui->addGroup("Validating fields");
   IntBox<int> * sliceWidget = gui->addVariable("Slice", slice);

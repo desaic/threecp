@@ -50,6 +50,10 @@ void Render::elementMeshEvent(int idx)
     em = new ElementRegGrid();
     assignGridMat(s, gridSize, em);
     updateGrid(s, gridSize);
+    if (idx == 0) {
+      pickEvent.edges.clear();
+      pickEvent.selection[0] = -1;
+    }
     delete meshes[idx];
     meshes[idx] = em;
     copyEleBuffers(idx);
@@ -81,18 +85,21 @@ void Render::drawContent()
   glUseProgram(program);
   glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, (const GLfloat*)mvp.data());
   glUniformMatrix4fv(mvit_loc, 1, GL_FALSE, (const GLfloat*)mvit.data());
+  
   for (size_t i = 0; i < meshes.size(); i++) {
     elementMeshEvent(i);
     glBindVertexArray(buffers[i].vao);
     drawElementMesh(meshes[i]);
+    //std::cout << "#ele " << meshes[i]->e.size() << "\n";
   }
   for (size_t i = 0; i < trigs.size(); i++) {
     glBindVertexArray(buffers[i+meshes.size()].vao);
     drawTrigMesh(trigs[i]);
   }
-  if (pickEvent.picked) {
+  if (pickEvent.picked && pickEvent.nLines>0) {
     glBindVertexArray(pickEvent.buf.vao);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    int nEdges = (int)pickEvent.edges.size();
+    glDrawArrays(GL_TRIANGLES, 0, 36 * pickEvent.nLines);
   }
 }
 
@@ -208,32 +215,27 @@ int addHexEle(ElementMesh * e, int ei,
   else if (e->eLabel[ei] == 2) {
     color = Eigen::Vector3f(0.9, 0.5, 0.5);
   }
+  Eigen::Vector3d center = eleCenter(e, ei);
   std::vector<Eigen::Vector3d> verts(e->e[ei]->nV());
   for (int i = 0; i < e->e[ei]->nV(); i++) {
-    verts[i]=e->X[e->e[ei]->at(i)];
+    verts[i]=center + 0.9*(e->X[e->e[ei]->at(i)]-center);
   }
   cnt = addCube(verts, color, v, n, c);
   return cnt;
 }
 
-Eigen::Vector3d eleCenter(const ElementMesh * e, int i)
-{
-  Eigen::Vector3d center(0, 0, 0);
-  int nV = (int)e->e[i]->nV();
-  for (int j = 0; j < nV; j++) {
-    center += e->X[e->e[i]->at(j)];
-  }
-  center = (1.0 / nV) * center;
-  return center;
-}
-
 void Render::copyEleBuffers(int idx)
 {
+  if ((int)meshes.size() <= idx) {
+    return;
+  }
+  std::cout << "Copy em buffer " << idx << "\n";
   ShaderBuffer buf = buffers[idx];
   ElementMesh * e = meshes[idx];
+  std::cout << "em #ele " << e->e.size() << "\n";
   int slice = emEvent[idx].slice;
   grid.lb[2] = slice;
-  int gridres = 32;
+  int gridres = grid.gridSize[2];
   double dx = 1.0 / gridres;
 
   std::vector<int> eidx;
@@ -293,22 +295,25 @@ void Render::initEleBuffers(int idx)
   copyEleBuffers(idx);
 }
 
-void copyRayBuffers(ShaderBuffer & buf, const Ray & r)
+int addLine(Eigen::Vector3d x0, Eigen::Vector3d x1,
+  const Eigen::Vector3f & color,
+  GLfloat * v, GLfloat * n, GLfloat * c)
 {
   std::vector < Eigen::Vector3d> verts(8);
-
   Eigen::Vector3d x(1, 0, 0);
-  if (std::abs(r.d[0]) > 0.9) {
+  Eigen::Vector3d d = x1 - x0;
+  float dz = d.norm();
+  Eigen::Vector3d z = (1.0 / dz)*d;
+  if (std::abs(z[0]) > 0.9) {
     x << 0, 0, 1;
   }
-  Eigen::Vector3d z = r.d.cast<double>();
   Eigen::Vector3d y = z.cross(x);
-  Eigen::Vector3d o = r.o.cast<double>();
+  Eigen::Vector3d o = x0;
   y.normalize();
   x = y.cross(z);
   x.normalize();
-  float dz = 2;
-  float dx = 0.001;
+  
+  float dx = 0.01;
   verts[0] = o - dx * x - dx * y;
   verts[1] = o - dx * x - dx * y + dz * z;
   verts[2] = o - dx * x + dx * y;
@@ -318,16 +323,38 @@ void copyRayBuffers(ShaderBuffer & buf, const Ray & r)
   verts[6] = o + dx * x + dx * y;
   verts[7] = o + dx * x + dx * y + dz * z;
 
+  int cnt = addCube(verts, color, v, n, c);
+  return cnt;
+}
+
+void copyRayBuffers(ShaderBuffer & buf, PickEvent & event, ElementMesh * em)
+{
+  
   Eigen::Vector3f color;
   color << 0.8, 0.7, 0.7;
   int nTrig = 12;
   int dim = 3;
-  int nFloat = nTrig * 3 * dim;
+  event.nLines = event.edges.size();
+  if (event.nLines <= 0) {
+    return;
+  }
+  int nFloat = nTrig * event.nLines * 3 * dim;
   GLfloat * v = new GLfloat[nFloat];
   GLfloat * n = new GLfloat[nFloat];
   GLfloat * c = new GLfloat[nFloat];
-
-  int cnt = addCube(verts, color, v, n, c);
+  float len = 2;
+  Eigen::Vector3d x0 = event.r.o.cast<double>();
+  Eigen::Vector3d x1 = x0 + len * event.r.d.cast<double>();
+  int cnt = 0;
+  
+  for (EdgeMap::const_iterator iter = event.edges.begin(); iter != event.edges.end(); ++iter) {
+    std::pair<int,int> k = iter->first;
+    int e1 = k.first;
+    int e2 = k.second;
+    Eigen::Vector3d c1 = eleCenter(em, e1);
+    Eigen::Vector3d c2 = eleCenter(em, e2);
+    cnt += addLine(c1, c2, color, v + cnt, n + cnt, c + cnt);
+  }
   glBindVertexArray(buf.vao);
   glBindBuffer(GL_ARRAY_BUFFER, buf.b[0]);
   glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), v, GL_DYNAMIC_DRAW);
@@ -358,7 +385,7 @@ void Render::initRayBuffers()
   glGenBuffers(nBuf, pickEvent.buf.b.data());
   pickEvent.r.o = Eigen::Vector3f(0, 0, 0);
   pickEvent.r.d = Eigen::Vector3f(0, 0, 1);
-  copyRayBuffers(pickEvent.buf, pickEvent.r);
+  copyRayBuffers(pickEvent.buf, pickEvent, meshes[0]);
 }
 
 void checkShaderError(GLuint shader)
@@ -486,8 +513,68 @@ void Render::pick(double xpos, double ypos)
       meshes[0]->eLabel[id] = (meshes[0]->eLabel[id] + 1) % 3;
       std::cout << "Pick " << id << "\n";
       copyEleBuffers(0);
+      //making an edge
+      if (meshes[0]->eLabel[id] == 2) {
+        if (pickEvent.selection[0] < 0) {
+          pickEvent.selection[0] = id;
+        }
+        else {
+          if (pickEvent.selection[0] != id) {
+            pickEvent.selection[1] = id;
+            pickEvent.edges[std::make_pair(pickEvent.selection[0], pickEvent.selection[1])] = 1;
+            std::fill(pickEvent.selection.begin(), pickEvent.selection.end(), -1);
+          }
+        }
+      }
+      else if(meshes[0]->eLabel[id] == 1){
+        pickEvent.verts.insert(id);
+      }
+      else if(meshes[0]->eLabel[id] == 0){
+        pickEvent.verts.erase(id);
+      }
     }
   }
   
-  copyRayBuffers(pickEvent.buf, pickEvent.r);
+  copyRayBuffers(pickEvent.buf, pickEvent, meshes[0]);
+}
+
+void PickEvent::saveGraph(ElementMesh * em, RegGrid * grid) {
+  std::string filename = "graph" + std::to_string(graphIdx) + ".txt";
+  std::cout << "save graph " << filename << "\n";
+  FileUtilOut out(filename);
+  out.out << verts.size() << " " << edges.size() << "\n";
+  //out.out << grid->gridSize[0] << " " << grid->gridSize[1] << " " << grid->gridSize[2] << "\n";
+  //for (std::set<int>::const_iterator it = verts.begin(); it != verts.end(); it++) {
+  //  out.out << *it << "\n";
+  //}
+  std::map<int, int> verts;
+  for (EdgeMap::const_iterator iter = edges.begin(); iter != edges.end(); ++iter){
+    std::pair<int, int> k = iter->first;
+    int e1 = k.first;
+    int e2 = k.second;
+    if (verts.find(e1) == verts.end()) {
+      verts[e1] = verts.size();
+    }
+    if(verts.find(e2) == verts.end()){
+      verts[e2] = verts.size();
+    }
+  }
+  for (std::map<int, int>::const_iterator it = verts.begin(); it != verts.end(); it++) {
+    int ei = it->first;
+    Eigen::Vector3d center = eleCenter(em, ei);
+    out.out << ei << " " << it->second;
+    for (int j = 0; j < 3; j++) {
+      out.out << " " << center[j];
+    }
+    out.out << "\n";
+  }
+
+  for (EdgeMap::const_iterator iter = edges.begin(); iter != edges.end(); ++iter){
+    std::pair<int, int> k = iter->first;
+    int e1 = k.first;
+    int e2 = k.second;
+    out.out << verts[e1] << " " << verts[e2] << "\n";
+  }
+  out.close();
+  graphIdx++;
 }

@@ -12,6 +12,14 @@
 #include "TrigMesh.hpp"
 #include "VoxelIO.hpp"
 
+void readVoxGraph(std::string filename, std::vector<int> & verts,
+  std::vector<std::vector<int > > & edges)
+{
+  int nV = 0, nE = 0;
+  FileUtilIn in (filename);
+
+}
+
 static void error_callback(int error, const char* description)
 {
   fprintf(stderr, "Error: %s\n", description);
@@ -66,7 +74,6 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     render->meshes.push_back(grid);
     in.close();
   }
-
 
 
 }
