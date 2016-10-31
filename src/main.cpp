@@ -75,6 +75,10 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     in.close();
   }
 
+  std::string graphFile = conf.getString("graph");
+  if (graphFile.size() > 0) {
+    loadGraph(graphFile, render->g);
+  }
 
 }
 

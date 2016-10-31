@@ -2,6 +2,7 @@
 #include "FileUtil.hpp"
 #include "Camera.hpp"
 #include <nanogui\nanogui.h>
+#include "Graph.hpp"
 #include "RegGrid.hpp"
 #include <set>
 
@@ -86,6 +87,9 @@ public:
   std::vector<TrigMesh * > trigs;
   std::vector<ShaderBuffer> buffers;
 
+  Graph g;
+  ShaderBuffer gbuf;
+
   PickEvent pickEvent;
   RegGrid grid;
 
@@ -96,8 +100,10 @@ public:
   void init();
   void initTrigBuffers(TrigMesh * m);
   void initEleBuffers(int idx);
+  void initGraphBuffers();
   void initRayBuffers();
   void copyEleBuffers(int idx);
+  void copyGraphBuffers();
   void updateGrid(const std::vector<double> & s, const std::vector<int> & gridSize);
   void pick(double xpos, double ypos);
 

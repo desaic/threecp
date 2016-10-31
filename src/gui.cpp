@@ -189,7 +189,7 @@ void ViewerGUI::init()
   // Create nanogui gui
   bool enabled = true;
   FormHelper *gui = new FormHelper(screen);
-  ref<Window> nanoguiWindow = gui->addWindow(Eigen::Vector2i(100, 100), "Form helper example");
+  ref<Window> nanoguiWindow = gui->addWindow(Eigen::Vector2i(100, 100), "File");
 
   gui->addGroup("File IO");
   std::function<void()> f_ButtonOpen = std::bind(&ViewerGUI::ButtonCBOpen, this);
@@ -207,17 +207,18 @@ void ViewerGUI::init()
   //gui->addVariable("bool", bvar)->setTooltip("Test tooltip.");
   //gui->addVariable("string", strval);
 
-  gui->addGroup("Validating fields");
-  IntBox<int> * sliceWidget = gui->addVariable("Slice", slice);
-  sliceWidget->setSpinnable(true);
-  sliceWidget->setMinMaxValues(0, 64);
+  //gui->addGroup("Validating fields");
+  //IntBox<int> * sliceWidget = gui->addVariable("Slice", slice);
+  //sliceWidget->setSpinnable(true);
+  //sliceWidget->setMinMaxValues(0, 64);
 
-  gui->addVariable("float", fvar)->setTooltip("Test.");
-  gui->addVariable("double", dvar)->setSpinnable(true);
+  //gui->addVariable("float", fvar)->setTooltip("Test.");
+  //gui->addVariable("double", dvar)->setSpinnable(true);
 
-  gui->addGroup("Complex types");
-  gui->addVariable("Enumeration", enumval, enabled)->setItems({ "Item 1", "Item 2", "Item 3" });
-  gui->addVariable("Color", colval);
+  //gui->addGroup("Complex types");
+  //gui->addVariable("Enumeration", enumval, enabled)->setItems({ "Item 1", "Item 2", "Item 3" });
+  //gui->addVariable("Color", colval);
+
   screen->setVisible(true);
   screen->performLayout();
   nanoguiWindow->center();

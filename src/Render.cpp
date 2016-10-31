@@ -96,10 +96,14 @@ void Render::drawContent()
     glBindVertexArray(buffers[i+meshes.size()].vao);
     drawTrigMesh(trigs[i]);
   }
-  if (pickEvent.picked && pickEvent.nLines>0) {
+  if (pickEvent.picked && pickEvent.nLines>0 && meshes.size()>0) {
     glBindVertexArray(pickEvent.buf.vao);
     int nEdges = (int)pickEvent.edges.size();
     glDrawArrays(GL_TRIANGLES, 0, 36 * pickEvent.nLines);
+  }
+  if (g.E.size() > 0) {
+    glBindVertexArray(gbuf.vao);
+    glDrawArrays(GL_TRIANGLES, 0, 36 * g.E.size());
   }
 }
 
@@ -168,7 +172,6 @@ void Render::initTrigBuffers(TrigMesh * m)
   delete[]n;
   delete[]color;
 }
-
 
 int addCube(const std::vector<Eigen::Vector3d> & verts,
   const Eigen::Vector3f & color, 
@@ -376,6 +379,61 @@ void copyRayBuffers(ShaderBuffer & buf, PickEvent & event, ElementMesh * em)
   delete[]c;
 }
 
+void Render::copyGraphBuffers()
+{
+  Eigen::Vector3f color;
+  color << 0.7, 0.9, 0.7;
+  int nTrig = 12;
+  int dim = 3;
+  if (g.E.size() == 0) {
+    return;
+  }
+  int nFloat = nTrig * g.E.size() * 3 * dim;
+  GLfloat * v = new GLfloat[nFloat];
+  GLfloat * n = new GLfloat[nFloat];
+  GLfloat * c = new GLfloat[nFloat];
+  float len = 2;
+  int cnt = 0;
+
+  for (size_t i = 0; i < g.E.size(); i++) {
+    int v1 = g.E[i][0];
+    int v2 = g.E[i][1];
+    Eigen::Vector3d c1 = g.V[v1].cast<double>();
+    Eigen::Vector3d c2 = g.V[v2].cast<double>();
+    cnt += addLine(c1, c2, color, v + cnt, n + cnt, c + cnt);
+  }
+
+  glBindVertexArray(gbuf.vao);
+  glBindBuffer(GL_ARRAY_BUFFER, gbuf.b[0]);
+  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), v, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, gbuf.b[1]);
+  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), n, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, gbuf.b[2]);
+  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), c, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  delete[]v;
+  delete[]n;
+  delete[]c;
+}
+
+void Render::initGraphBuffers()
+{
+  int nBuf = 3;
+  glGenVertexArrays(1, &gbuf.vao);
+  glBindVertexArray(gbuf.vao);
+  gbuf.b.resize(nBuf, 0);
+  glGenBuffers(nBuf, gbuf.b.data());
+  copyGraphBuffers();
+}
+
 void Render::initRayBuffers()
 {
   int nBuf = 3;
@@ -385,7 +443,9 @@ void Render::initRayBuffers()
   glGenBuffers(nBuf, pickEvent.buf.b.data());
   pickEvent.r.o = Eigen::Vector3f(0, 0, 0);
   pickEvent.r.d = Eigen::Vector3f(0, 0, 1);
-  copyRayBuffers(pickEvent.buf, pickEvent, meshes[0]);
+  if (meshes.size() > 0) {
+    copyRayBuffers(pickEvent.buf, pickEvent, meshes[0]);
+  }
 }
 
 void checkShaderError(GLuint shader)
@@ -443,6 +503,9 @@ void Render::init()
     initTrigBuffers(trigs[i]);
   }
   initRayBuffers();
+  if (g.E.size() > 0) {
+    initGraphBuffers();
+  }
 }
 
 void Render::loadShader(std::string vsfile, std::string fsfile)
@@ -534,8 +597,9 @@ void Render::pick(double xpos, double ypos)
       }
     }
   }
-  
-  copyRayBuffers(pickEvent.buf, pickEvent, meshes[0]);
+  if (meshes.size() > 0) {
+    copyRayBuffers(pickEvent.buf, pickEvent, meshes[0]);
+  }
 }
 
 void PickEvent::saveGraph(ElementMesh * em, RegGrid * grid) {

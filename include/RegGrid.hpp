@@ -11,6 +11,9 @@ struct RegGrid
   Eigen::Vector3d o;
   Eigen::Vector3d dx;
   Eigen::Vector3i lb;
+  RegGrid() {
+    gridSize.resize(3, 0);
+  }
   void allocate(int nx, int ny, int nz) {
     gridSize.resize(3, 0);
     gridSize[0] = nx;
