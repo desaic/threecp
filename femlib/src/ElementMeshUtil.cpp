@@ -585,7 +585,7 @@ bool hitWall(float wallDist, const std::vector<Eigen::Vector3d> & x, int dim, in
 void assignGridMat(const std::vector<double> & s,
   const std::vector<int> & gridSize, ElementRegGrid * grid)
 {
-  double thresh = 5e-2;
+  double thresh = 1e-2;
   grid->resize(gridSize[0], gridSize[1], gridSize[1]);
   std::vector<Element* > e;
   std::vector<Eigen::Vector3f> color;

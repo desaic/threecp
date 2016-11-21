@@ -221,7 +221,7 @@ int addHexEle(ElementMesh * e, int ei,
   Eigen::Vector3d center = eleCenter(e, ei);
   std::vector<Eigen::Vector3d> verts(e->e[ei]->nV());
   for (int i = 0; i < e->e[ei]->nV(); i++) {
-    verts[i]=center + 0.9*(e->X[e->e[ei]->at(i)]-center);
+    verts[i]=center + (e->X[e->e[ei]->at(i)]-center);
   }
   cnt = addCube(verts, color, v, n, c);
   return cnt;

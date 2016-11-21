@@ -108,9 +108,7 @@ void loadBinDouble(const std::string & filename,
   in.close();
 
   s = mirrorOrthoStructure(s0, gridSize);
-  for (size_t i = 0; i < gridSize.size(); i++) {
-    gridSize[i] *= 2;
-  }
+
 }
 
 void saveBinaryStructure(const std::string & filename,

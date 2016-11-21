@@ -46,6 +46,14 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     in.close();
   }
 
+  bool mirror = false;
+  bool saveObj = false;
+  bool flip = false;
+  bool repeat = false;
+  conf.getBool("saveObj", saveObj);
+  conf.getBool("mirror", mirror);
+  conf.getBool("flip", flip);
+  conf.getBool("repeat", repeat);
   std::vector<std::string> voxFiles = conf.getStringVector("voxfiles");
   std::cout << "vox file " << voxFiles.size() << "\n";
   for (size_t i = 0; i < voxFiles.size(); i++) {
@@ -58,18 +66,37 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     std::vector<double> s;
     ElementRegGrid * grid = new ElementRegGrid();
     loadBinaryStructure(voxFiles[i], s, gridSize);
-    std::cout << "vox file " << voxFiles[i] << "\n";
-    //s = mirrorOrthoStructure(s, gridSize);
     //loadBinDouble(voxFiles[i], s, gridSize);
+    //
+    if (flip) {
+      for (size_t j = 0; j < s.size(); j++) {
+        if (s[j] > 0.5) {
+          s[j] = 0;
+        }
+        else {
+          s[j] = 1;
+        }
+      }
+    }
+    std::cout << "vox file " << voxFiles[i] << "\n";
+    if (mirror) {
+      s = mirrorOrthoStructure(s, gridSize);
+    }
+    if (repeat) {
+      s = mirrorOrthoStructure(s, gridSize);
+    }
+
     assignGridMat(s, gridSize, grid);
     std::cout << "Grid size " << gridSize[0] << " " << gridSize[1] << " " << gridSize[2] << ".\n";
     if (i == 0) {
       render->updateGrid(s, gridSize);
     }
-    //TrigMesh tm;
-    //hexToTrigMesh(grid, &tm);
-    //std::string outfile = voxFiles[i] + ".obj";
-    //tm.save_obj(outfile.c_str());
+    if (saveObj && i == 0) {
+      TrigMesh tm;
+      hexToTrigMesh(grid, &tm);
+      std::string outfile = voxFiles[i] + ".obj";
+      tm.save_obj(outfile.c_str());
+    }
 
     render->meshes.push_back(grid);
     in.close();
@@ -89,8 +116,8 @@ int main(int argc, char * argv[])
   gui->render = render;
   GLFWwindow* window;
   glfwSetErrorCallback(error_callback);
-  if (!glfwInit())
-    exit(EXIT_FAILURE);
+  if (!glfwInit()){ exit(EXIT_FAILURE); }
+    
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_DEPTH_BITS, 32);
@@ -129,7 +156,7 @@ int main(int argc, char * argv[])
   {
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
-    glClearColor(0.9, 0.9, 0.9, 1.0);
+    glClearColor(1, 1, 1, 1.0);
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
