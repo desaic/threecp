@@ -22,5 +22,9 @@ void computeIncidence(Graph & G);
 /// do not remove it. i.e. have some quality measures based on 3d coordinates.
 void contractVertDegree2(Graph & G);
 
+void contractEdge(Graph & G, int vi, int vj);
+
+void mergeCloseVerts(Graph & G, float eps);
+
 void rmIsolatedVerts(Graph & G);
 #endif

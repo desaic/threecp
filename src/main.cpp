@@ -92,6 +92,8 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     if (toGraph) {
       voxToGraph(s, gridSize, G);
       contractVertDegree2(G);
+      float eps = 0.1f;
+      mergeCloseVerts(G, eps);
       saveGraph("skelGraph.txt", G);
     }
     assignGridMat(s, gridSize, grid);

@@ -1,5 +1,6 @@
 #include "GraphUtil.hpp"
 #include "ArrayUtil.hpp"
+#include <iterator>
 #include <map>
 #include <set>
 void addNeighbors(const std::vector<double> & s, const std::vector<int> & gridSize,
@@ -107,12 +108,72 @@ void contractVertDegree2(Graph & G)
   computeEdges(G);
 }
 
+void contractEdge(Graph & G, int vi, int vj)
+{
+  Eigen::Vector3f newV = 0.5*(G.V[vi] + G.V[vj]);
+  int newIdx = G.V.size();
+  G.V.push_back(newV);
+  G.IV.push_back(std::vector<int>(0));
+  //new vertex' neighbor is the union of vi and vj's neighbors.
+  std::set<int> nbr;
+  std::copy(G.IV[vi].begin(), G.IV[vi].end(), std::inserter(nbr, nbr.end()));
+  std::copy(G.IV[vj].begin(), G.IV[vj].end(), std::inserter(nbr, nbr.end()));
+  nbr.erase(vi);
+  nbr.erase(vj);
+  G.IV[vi].clear();
+  G.IV[vj].clear();
+  std::copy(nbr.begin(), nbr.end(), std::back_inserter(G.IV[newIdx]));
+  for (size_t i = 0; i < G.IV[newIdx].size(); i++) {
+    int ni = G.IV[newIdx][i];
+    remove(G.IV[ni], vi);
+    remove(G.IV[ni], vj);
+    if (!contains(G.IV[ni], newIdx)) {
+      G.IV[ni].push_back(newIdx);
+    }
+  }
+}
+
+void mergeCloseVerts(Graph & G, float eps)
+{
+  if (G.IV.size() == 0) {
+    computeIncidence(G);
+  }
+  while (1) {
+    //candidates for merging
+    std::set<int> candidates;
+    for (size_t i = 0; i < G.IV.size(); i++) {
+      for (int j = 0; j<G.IV[i].size(); j++) {
+        int vj = G.IV[i][j];
+        float dist = (G.V[i] - G.V[vj]).norm();
+        if (dist < eps) {
+          candidates.insert(i);
+        }
+      }
+    }
+    if (candidates.size() == 0) {
+      break;
+    }
+    for (std::set<int>::iterator it = candidates.begin(); it != candidates.end(); it++) {
+      int vi = (*it);
+      for (int j = 0; j < G.IV[vi].size(); j++) {
+        int vj = G.IV[vi][j];
+        float dist = (G.V[vi] - G.V[vj]).norm();
+        if (dist < eps) {
+          contractEdge(G, vi, vj);
+        }
+      }
+    }
+  }
+  rmIsolatedVerts(G);
+  computeEdges(G);
+}
+
 void rmIsolatedVerts(Graph & G)
 {
   std::vector<int> Vnew(G.V.size());
   int vCnt = 0;
   for (size_t i = 0; i < G.IV.size(); i++) {
-    if (G.IV.size() > 0) {
+    if (G.IV[i].size() > 0) {
       Vnew[i] = vCnt;
       vCnt++;
     }
