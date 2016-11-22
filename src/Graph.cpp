@@ -26,3 +26,21 @@ void loadGraph(std::string filename, Graph & g)
   }
   in.close();
 }
+
+void saveGraph(std::string filename, const Graph & g)
+{
+  FileUtilOut out(filename);
+  int dim = 3;
+  out.out << g.V.size() << " " << g.E.size() << "\n";
+  for (size_t i = 0; i < g.V.size(); i++) {
+    out.out << "0 " << i;
+    for (int j = 0; j < dim; j++) {
+      out.out <<" "<< g.V[i][j];
+    }
+    out.out << "\n";
+  }
+  for (size_t i = 0; i < g.E.size(); i++) {
+    out.out << g.E[i][0] << " " << g.E[i][1] << "\n";
+  }
+  out.close();
+}

@@ -32,7 +32,6 @@ struct Ray
   Eigen::Vector3f o, d;
 };
 
-typedef std::map<std::pair<int, int>, int> EdgeMap;
 typedef std::set<int> VertexSet;
 struct PickEvent
 {

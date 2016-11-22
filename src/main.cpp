@@ -7,6 +7,7 @@
 #include "Element.hpp"
 #include "ElementRegGrid.hpp"
 #include "ElementMeshUtil.hpp"
+#include "GraphUtil.hpp"
 #include "linmath.h"
 #include "gui.hpp"
 #include "TrigMesh.hpp"
@@ -50,10 +51,13 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
   bool saveObj = false;
   bool flip = false;
   bool repeat = false;
+  bool toGraph = false;
   conf.getBool("saveObj", saveObj);
   conf.getBool("mirror", mirror);
   conf.getBool("flip", flip);
   conf.getBool("repeat", repeat);
+  conf.getBool("toGraph", toGraph);
+  Graph G;
   std::vector<std::string> voxFiles = conf.getStringVector("voxfiles");
   std::cout << "vox file " << voxFiles.size() << "\n";
   for (size_t i = 0; i < voxFiles.size(); i++) {
@@ -85,7 +89,11 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     if (repeat) {
       s = mirrorOrthoStructure(s, gridSize);
     }
-
+    if (toGraph) {
+      voxToGraph(s, gridSize, G);
+      contractVertDegree2(G);
+      saveGraph("skelGraph.txt", G);
+    }
     assignGridMat(s, gridSize, grid);
     std::cout << "Grid size " << gridSize[0] << " " << gridSize[1] << " " << gridSize[2] << ".\n";
     if (i == 0) {

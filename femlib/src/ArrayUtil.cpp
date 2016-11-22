@@ -51,3 +51,45 @@ int gridToLinearIdx(int ix, int iy, int iz, const std::vector<int> & gridSize)
 {
   return ix * gridSize[1] * gridSize[2] + iy * gridSize[2] + iz;
 }
+
+void linearToGridIdx(int l, const std::vector<int> & gridSize,
+  std::vector<int> & gridIdx)
+{
+  gridIdx.resize(gridSize.size(), 0);
+  for (int i = (int)gridSize.size() - 1; i > 0; i--) {
+    gridIdx[i] = l % (gridSize[i]);
+    l = l / (gridSize[i]);
+  }
+  gridIdx[0] = l;
+}
+
+bool inbound(int i, int j, int k, const std::vector<int> & s)
+{
+  return (i >= 0 && i < s[0] && j >= 0 && j < s[1] &&
+    k >= 0 && k < s[2]);
+}
+
+bool contains(const std::vector<int>& a, int val)
+{
+  for (size_t i = 0; i < a.size(); i++) {
+    if (a[i] == val) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void remove(std::vector<int> & a, int val)
+{
+  int idx = -1;
+  for (size_t i = 0; i < a.size(); i++) {
+    if (a[i] == val) {
+      idx = i;
+    }
+  }
+  if (idx < 0) {
+    return;
+  }
+  a[idx] = a[a.size() - 1];
+  a.resize(a.size() - 1);
+}

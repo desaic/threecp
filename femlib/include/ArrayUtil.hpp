@@ -89,6 +89,9 @@ void addmul(std::vector<T> & dst, float f, const std::vector<T> & src)
 
 int gridToLinearIdx(int ix, int iy, int iz, const std::vector<int> & gridSize);
 
+void linearToGridIdx(int l, const std::vector<int> & gridSize,
+  std::vector<int> & gridIdx);
+
 template<typename T>
 void setVal(std::vector<T> & a, const std::vector<int> & c, const T & val)
 {
@@ -98,5 +101,13 @@ void setVal(std::vector<T> & a, const std::vector<int> & c, const T & val)
     }
   }
 }
+
+bool contains(const std::vector<int> & a, int val);
+
+/// \removes value val if a contains it. 
+/// may change the order of other items for efficiency.
+void remove(std::vector<int> & a, int val);
+
+bool inbound(int i, int j, int k, const std::vector<int> & s);
 
 #endif // ARRAYUTIL_HPP
