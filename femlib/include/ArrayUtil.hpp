@@ -103,6 +103,7 @@ void setVal(std::vector<T> & a, const std::vector<int> & c, const T & val)
 }
 
 bool contains(const std::vector<int> & a, int val);
+void addUnique(std::vector<int> & a, int val);
 
 /// \removes value val if a contains it. 
 /// may change the order of other items for efficiency.

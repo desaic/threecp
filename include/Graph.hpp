@@ -8,6 +8,7 @@
 typedef std::map<std::pair<int, int>, int> EdgeMap;
 
 struct Graph{
+  std::vector<int> VLabel;
   std::vector<Eigen::Vector3f> V;
   //list of edges.
   std::vector<std::vector<int> > E;

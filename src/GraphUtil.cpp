@@ -68,7 +68,34 @@ void voxToGraph(const std::vector<double> & s, const std::vector<int> & gridSize
   computeEdges(G);
 }
 
-void contractVertDegree2(Graph & G)
+float ptLineDist(Eigen::Vector3f pt, Eigen::Vector3f x0, Eigen::Vector3f x1,
+  float & t)
+{
+  Eigen::Vector3f v0 = pt - x0;
+  Eigen::Vector3f dir = (x1 - x0);
+  double len = dir.norm();
+  dir = (1.0 / len)*dir;
+  //component of v0 parallel to the line segment.
+  t = v0.dot(dir);
+  Eigen::Vector3f a = t * dir;
+  t = t / len;
+  Eigen::Vector3f b = v0 - a;
+  double dist = 0;
+
+  if (t < 0) {
+    dist = (pt - x0).norm();
+  }
+  else if (t > 1) {
+    dist = (pt - x1).norm();
+  }
+  else {
+    dist = b.norm();
+  }
+
+  return dist;
+}
+
+void contractVertDegree2(Graph & G, float eps)
 {
   if (G.IV.size() == 0) {
     computeIncidence(G);
@@ -89,9 +116,16 @@ void contractVertDegree2(Graph & G)
       if (G.IV[vi].size() != 2) {
         continue;
       }
-      //make new edge connecting its 2 neighbors
       int v0 = G.IV[vi][0];
       int v1 = G.IV[vi][1];
+      //float t = 0;
+      //float dist = ptLineDist(G.V[vi], G.V[v0], G.V[v1], t);
+      ////check new edge is not too far away from the vertex.
+      //if (dist > eps) {
+      //  continue;
+      //}
+      //make new edge connecting its 2 neighbors
+
       if (!contains(G.IV[v0], v1)) {
         G.IV[v0].push_back(v1);
         G.IV[v1].push_back(v0);
@@ -131,6 +165,118 @@ void contractEdge(Graph & G, int vi, int vj)
       G.IV[ni].push_back(newIdx);
     }
   }
+}
+
+void contractPath(Graph & G, float eps)
+{
+  std::vector<int> path;
+  G.VLabel.clear();
+  G.VLabel.resize(G.V.size(), 0);
+  while (1) {
+    findPath(G, path);
+    if (path.size() <= 2) {
+      std::cout << "Path too short in contract Path.\n";
+      break;
+    }
+    std::vector<int> newPath;
+    int i0 = path[0];
+    int i1 = path[path.size() - 1];
+    Eigen::Vector3f v0 = G.V[i0];
+    Eigen::Vector3f v1 = G.V[i1];
+    float maxDist = 0;
+    int maxIdx = -1;
+    float t = 0;
+
+    for (size_t i = 1; i < path.size() - 1; i++) {
+      float dist = ptLineDist(G.V[path[i]], v0, v1, t);
+      int vidx = path[i];
+      if (dist > maxDist) {
+        maxDist = dist;
+        maxIdx = vidx;
+      }
+      G.IV[vidx].clear();
+      if (i == 1) {
+        remove(G.IV[i0], vidx);
+      }
+      if (i == (int)path.size() - 2) {
+        remove(G.IV[i1], vidx);
+      }
+    }
+    newPath.push_back(i0);
+    if (maxDist > eps) {
+      newPath.push_back(maxIdx);
+    }
+    newPath.push_back(i1);
+
+    for (int i = 1; i < newPath.size(); i++) {
+      int prev = newPath[i - 1];
+      int vidx = newPath[i];
+      addUnique(G.IV[prev],vidx);
+      addUnique(G.IV[vidx], prev);
+      G.VLabel[vidx] = 1;
+    }
+    //break;
+  }
+
+  rmIsolatedVerts(G);
+  computeEdges(G);
+}
+
+// includes end points with deg !=2 or endpoint = i
+void findPathAlong(Graph & G, int v0, int v1, std::vector<int>& path)
+{
+  int v2;
+  int vstart = v0;
+  while (1) {
+    path.push_back(v1);
+    if (G.IV[v1].size() != 2) {
+      break;
+    }
+    //find v2, neighbor of v1 that's not v0.
+    if (G.IV[v1][0] == v0) {
+      v2 = G.IV[v1][1];
+    }
+    else {
+      v2 = G.IV[v1][0];
+    }
+    if (v2!=vstart) {
+      v0 = v1;
+      v1 = v2;
+    }
+    else {
+      //reached a junction or an endpoint.
+      break;
+    }
+  }
+}
+
+void findPath(Graph & G, std::vector<int>& path)
+{
+  path.clear();
+  if (G.IV.size() == 0) {
+    computeIncidence(G);
+  }
+  int i = 0;
+  for (; i < (int)G.V.size(); i++) {
+    if (G.VLabel.size() == G.V.size() && G.VLabel[i] != 0) {
+      continue;
+    }
+    if (G.IV[i].size() == 2) {
+      break;
+    }
+  }
+  if (i == (int)G.V.size()) {
+    return;
+  }
+  std::vector<int> path0, path1;
+  int v1 = G.IV[i][0];
+  int v2 = G.IV[i][1];
+  findPathAlong(G, i, v1, path0);
+  std::reverse(path0.begin(), path0.end());
+  path.insert(path.end(), path0.begin(), path0.end());
+  path.push_back(i);
+  findPathAlong(G, i, v2, path1);
+  path.insert(path.end(), path1.begin(), path1.end());
 }
 
 void mergeCloseVerts(Graph & G, float eps)

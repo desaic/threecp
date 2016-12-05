@@ -52,11 +52,27 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
   bool flip = false;
   bool repeat = false;
   bool toGraph = false;
+  bool cutTet = false;
+  bool convertSkel = false;
+  bool saveTxt = false;
+
+  conf.getBool("convertSkel", convertSkel);
   conf.getBool("saveObj", saveObj);
   conf.getBool("mirror", mirror);
   conf.getBool("flip", flip);
   conf.getBool("repeat", repeat);
   conf.getBool("toGraph", toGraph);
+  conf.getBool("cutTet", cutTet);
+  conf.getBool("saveTxt", saveTxt);
+
+  if (convertSkel) {
+    int inputres = 0;
+    std::vector<double> sk;
+    std::string skelFile = conf.dir + conf.getString("skelFile");
+    loadArr3dTxt(skelFile, sk, inputres);
+    std::vector<int> skelSize(3, inputres);
+    saveBinaryStructure("tmp.bin", sk, skelSize);
+  }
   Graph G;
   std::vector<std::string> voxFiles = conf.getStringVector("voxfiles");
   std::cout << "vox file " << voxFiles.size() << "\n";
@@ -89,11 +105,21 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     if (repeat) {
       s = mirrorOrthoStructure(s, gridSize);
     }
+    if (cutTet) {
+      getCubicTet(s, gridSize);
+    }
+    if (saveTxt) {
+      FileUtilOut out("structure.txt");
+      printIntStructure(s.data(), gridSize, out.out);
+      out.close();
+    }
+
     if (toGraph) {
-      voxToGraph(s, gridSize, G);
-      contractVertDegree2(G);
       float eps = 0.1f;
+      voxToGraph(s, gridSize, G);
+      //contractVertDegree2(G, eps);
       mergeCloseVerts(G, eps);
+      contractPath(G, 0.1);
       saveGraph("skelGraph.txt", G);
     }
     assignGridMat(s, gridSize, grid);

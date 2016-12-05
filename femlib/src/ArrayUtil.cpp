@@ -79,6 +79,13 @@ bool contains(const std::vector<int>& a, int val)
   return false;
 }
 
+void addUnique(std::vector<int> & a, int val)
+{
+  if (!contains(a, val)) {
+    a.push_back(val);
+  }
+}
+
 void remove(std::vector<int> & a, int val)
 {
   int idx = -1;

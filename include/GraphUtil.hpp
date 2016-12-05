@@ -18,11 +18,16 @@ void computeIncidence(Graph & G);
 /// \brief contract vertices with degree 2.
 /// removes the vertices.
 /// \TODO handle graph cycles properly.
-/// If the vertex to be removed is far away from the line connecting its two neighboring vertices,
-/// do not remove it. i.e. have some quality measures based on 3d coordinates.
-void contractVertDegree2(Graph & G);
+/// If some vertex along the path to be removed is very far away from the final line segment, 
+/// do not remove it.
+void contractVertDegree2(Graph & G, float eps);
 
 void contractEdge(Graph & G, int vi, int vj);
+
+void contractPath(Graph & , float eps);
+
+/// \brief find a path made of degree 2 vertices only.
+void findPath(Graph & G, std::vector<int> & path);
 
 void mergeCloseVerts(Graph & G, float eps);
 

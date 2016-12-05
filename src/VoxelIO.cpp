@@ -1,9 +1,55 @@
 #include "VoxelIO.hpp"
 #include "ArrayUtil.hpp"
+#include "FileUtil.hpp"
 #include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
+
+int loadArr3dTxt(std::string filename, std::vector<double> & arr,
+  int &inputSize) {
+  int N = 0;
+  FileUtilIn in(filename.c_str());
+  if (!in.good()) {
+    return -1;
+  }
+  in.in >> N >> N >> N;
+  inputSize = N;
+  int nVox = N*N*N;
+  const int MAX_BUF = 64;
+  arr.resize(nVox, 0);
+  std::cout << "loadArr3dTxt " << N << "\n";
+  for (int i = 0; i < nVox; i++) {
+    char inStr[MAX_BUF];
+    double val = 0;
+    in.in >> inStr;
+    val = atof(inStr);
+    arr[i] = val;
+  }
+  in.close();
+  return 0;
+}
+
+void printIntStructure(const double * s, const std::vector<int> & gridSize, 
+  std::ostream & out)
+{
+  if (gridSize.size() < 3) {
+    return;
+  }
+  int N = gridSize[0] * gridSize[1] * gridSize[2];
+  out << gridSize[0] << " " << gridSize[1] << " " << gridSize[2] << "\n";
+  for (int i = 0; i < N; i++) {
+    int val = 1;
+    if (s[i] < 0.5) {
+      val = 0;
+    }
+    out << val << " ";
+    if (i % gridSize[1] == gridSize[1] - 1) {
+      out << "\n";
+    }
+  }
+  out << "\n";
+}
 
 void loadBinaryStructure(const std::string & filename,
   std::vector<int> & s,
@@ -78,6 +124,23 @@ std::vector<double> mirrorOrthoStructure(const std::vector<double> &s, std::vect
   }
   gridSize = newSize;
   return t;
+}
+
+void getCubicTet(std::vector<double>& s, std::vector<int>& gridSize)
+{
+  for (int i = 0; i < gridSize[0]; i++) {
+    for (int j = 0; j < gridSize[1]; j++) {
+      for (int k = 0; k < gridSize[2]; k++) {
+        int lidx = gridToLinearIdx(i, j, k, gridSize);
+        //if (i >= gridSize[0] / 2 || j >= gridSize[1] / 2 || k >= gridSize[2] / 2) {
+        //  s[lidx] = 0;
+        //}
+        if (j>i+1 || k>j+1) {
+          s[lidx] = 0;
+        }
+      }
+    }
+  }
 }
 
 void loadBinDouble(const std::string & filename,
