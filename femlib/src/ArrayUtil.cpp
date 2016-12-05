@@ -52,6 +52,11 @@ int gridToLinearIdx(int ix, int iy, int iz, const std::vector<int> & gridSize)
   return ix * gridSize[1] * gridSize[2] + iy * gridSize[2] + iz;
 }
 
+int gridToLinearIdx(int ix, int iy, int sy)
+{
+  return ix * sy + iy;
+}
+
 void linearToGridIdx(int l, const std::vector<int> & gridSize,
   std::vector<int> & gridIdx)
 {
@@ -67,6 +72,11 @@ bool inbound(int i, int j, int k, const std::vector<int> & s)
 {
   return (i >= 0 && i < s[0] && j >= 0 && j < s[1] &&
     k >= 0 && k < s[2]);
+}
+
+bool inbound(int i, int j, int si, int sj)
+{
+  return (i >= 0 && i < si && j >= 0 && j < sj);
 }
 
 bool contains(const std::vector<int>& a, int val)

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <iostream>
 
+#include "AddPillar.hpp"
 #include "ConfigFile.hpp"
 #include "Element.hpp"
 #include "ElementRegGrid.hpp"
@@ -55,9 +56,11 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
   bool cutTet = false;
   bool convertSkel = false;
   bool saveTxt = false;
+  bool makePillar = false;
 
   conf.getBool("convertSkel", convertSkel);
   conf.getBool("saveObj", saveObj);
+  conf.getBool("makePillar", makePillar);
   conf.getBool("mirror", mirror);
   conf.getBool("flip", flip);
   conf.getBool("repeat", repeat);
@@ -104,6 +107,10 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     }
     if (repeat) {
       s = mirrorOrthoStructure(s, gridSize);
+    }
+    if (makePillar) {
+      std::vector<double> support = addPillar(s, gridSize);
+      s = support;
     }
     if (cutTet) {
       getCubicTet(s, gridSize);

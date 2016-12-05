@@ -89,6 +89,8 @@ void addmul(std::vector<T> & dst, float f, const std::vector<T> & src)
 
 int gridToLinearIdx(int ix, int iy, int iz, const std::vector<int> & gridSize);
 
+int gridToLinearIdx(int ix, int iy, int sy);
+
 void linearToGridIdx(int l, const std::vector<int> & gridSize,
   std::vector<int> & gridIdx);
 
@@ -110,5 +112,5 @@ void addUnique(std::vector<int> & a, int val);
 void remove(std::vector<int> & a, int val);
 
 bool inbound(int i, int j, int k, const std::vector<int> & s);
-
+bool inbound(int i, int j, int si, int sj);
 #endif // ARRAYUTIL_HPP
