@@ -122,7 +122,7 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     }
 
     if (toGraph) {
-      float eps = 0.1f;
+      float eps = 0.08f;
       voxToGraph(s, gridSize, G);
       //contractVertDegree2(G, eps);
       mergeCloseVerts(G, eps);
