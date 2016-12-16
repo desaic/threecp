@@ -414,6 +414,27 @@ std::vector<float> permute(const std::vector<float> & a, int p)
   return ret;
 }
 
+std::vector<float> mirrorAxis(std::vector<float> & a, int c)
+{
+  int N = (int)a.size();
+  std::vector<int> idx(N, 0);
+  std::vector<float> ret(N, 0);
+  int base = 2;
+  for (int i = 0; i < N; i++) {
+    idx[i] = c % base;
+    c = c / base;
+  }
+  for (int i = 0; i < N; i++) {
+    if (idx[i] > 0) {
+      ret[i] = 1 - a[i];
+    }
+    else {
+      ret[i] = a[i];
+    }
+  }
+  return ret;
+}
+
 Eigen::Vector3f toVector3f(const std::vector<float> & a)
 {
   Eigen::Vector3f e;
@@ -430,9 +451,9 @@ void mirrorGraphCubic(Graph & G)
   int dim = 3;
   int nEdges = (int)G.E.size();
   //the first permutation is the original graph. Skip it.
-  for (int i = 1; i < nEdges; i++) {
+  for (int i = 0; i < nEdges; i++) {
     std::vector<float> v1(dim), v2(dim);
-    for (int p = 0; p < nPerm; p++) {
+    for (int p = 1; p < nPerm; p++) {
       eigen2vector(G.V[G.E[i][0]], v1);
       eigen2vector(G.V[G.E[i][1]], v2);
       v1 = permute(v1, p);
@@ -448,4 +469,23 @@ void mirrorGraphCubic(Graph & G)
   }
   
   //mirror new edges 8 times.
+  nEdges = (int)G.E.size();
+  int nComb = 8;
+  for (int i = 0; i < nEdges; i++) {
+    std::vector<float> v1(dim), v2(dim);
+    for (int p = 1; p < nComb; p++) {
+      eigen2vector(G.V[G.E[i][0]], v1);
+      eigen2vector(G.V[G.E[i][1]], v2);
+      v1 = mirrorAxis(v1, p);
+      v2 = mirrorAxis(v2, p);
+      int vidx = G.V.size();
+      G.V.push_back(toVector3f(v1));
+      G.V.push_back(toVector3f(v2));
+      std::vector<int> edge(2, 0);
+      edge[0] = vidx;
+      edge[1] = vidx + 1;
+      G.E.push_back(edge);
+    }
+  }
+
 }
