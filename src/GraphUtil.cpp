@@ -429,7 +429,8 @@ void mirrorGraphCubic(Graph & G)
   int nPerm = 6;
   int dim = 3;
   int nEdges = (int)G.E.size();
-  for (int i = 0; i < nEdges; i++) {
+  //the first permutation is the original graph. Skip it.
+  for (int i = 1; i < nEdges; i++) {
     std::vector<float> v1(dim), v2(dim);
     for (int p = 0; p < nPerm; p++) {
       eigen2vector(G.V[G.E[i][0]], v1);
