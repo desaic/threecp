@@ -44,3 +44,30 @@ void saveGraph(std::string filename, const Graph & g)
   }
   out.close();
 }
+
+void loadGraphParam(std::string filename, Graph & g)
+{
+  //list of vertex positions followed by beam parameters.
+  FileUtilIn in(filename);
+  if (!in.good()) {
+    return;
+  }
+  int idx = 0;
+  std::vector<std::vector<double> > params;
+  in.readArr2d(params);
+  in.close();
+  if (params.size() == 0) {
+    return;
+  }
+  int nParam = (int)params[0].size();
+  int dim = 3;
+  for (size_t i = 0; i < g.V.size(); i++) {
+    for (int j = 0; j < dim; j++) {
+      if (idx >= (int)params[0].size()) {
+        break;
+      }
+      g.V[i][j] = params[0][idx];
+      idx++;
+    }
+  }
+}

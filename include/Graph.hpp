@@ -22,4 +22,6 @@ void loadGraph(std::string filename, Graph & g);
 ///edges.
 void saveGraph(std::string filename, const Graph & g);
 
+void loadGraphParam(std::string filename, Graph & g);
+
 #endif

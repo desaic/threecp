@@ -122,7 +122,7 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     }
 
     if (toGraph) {
-      float eps = 0.08f;
+      float eps = 0.06f;
       voxToGraph(s, gridSize, G);
       //contractVertDegree2(G, eps);
       mergeCloseVerts(G, eps);
@@ -148,6 +148,10 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
   std::string graphFile = conf.getString("graph");
   if (graphFile.size() > 0) {
     loadGraph(graphFile, render->g);
+    if (conf.hasOpt("templateParam")) {
+      std::string tpFile = conf.getString("templateParam");
+      loadGraphParam(tpFile, render->g);
+    }
   }
 
 }

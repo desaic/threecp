@@ -21,6 +21,21 @@ FileUtilIn::readArr(std::vector<Eigen::Vector3f> & arr)
 }
 
 void
+FileUtilIn::readArr2d(std::vector<std::vector<double> > & arr)
+{
+  int nRow, nCol;
+  in >> nRow >> nCol;
+  arr.resize(nRow);
+  for (int i = 0; i < nRow; i++) {
+    arr[i].resize(nCol);
+    for (int j = 0; j < nCol; j++) {
+      in >> arr[i][j];
+    }
+  }
+  in.close();
+}
+
+void
 FileUtilIn::open(const std::string filename,std::ios_base::openmode mode )
 {
   in.open(filename,mode);
