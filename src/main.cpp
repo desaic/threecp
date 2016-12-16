@@ -152,6 +152,11 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
       std::string tpFile = conf.getString("templateParam");
       loadGraphParam(tpFile, render->g);
     }
+    bool mirrorgraph = false;
+    conf.getBool("mirrorgraph", mirrorgraph);
+    if (mirrorgraph) {
+      mirrorGraphCubic(render->g);
+    }
   }
 
 }

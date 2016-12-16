@@ -32,4 +32,6 @@ void findPath(Graph & G, std::vector<int> & path);
 void mergeCloseVerts(Graph & G, float eps);
 
 void rmIsolatedVerts(Graph & G);
+
+void mirrorGraphCubic(Graph & G);
 #endif

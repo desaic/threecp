@@ -1,8 +1,11 @@
 #include "GraphUtil.hpp"
+
 #include "ArrayUtil.hpp"
+#include "EigenUtil.hpp"
 #include <iterator>
 #include <map>
 #include <set>
+
 void addNeighbors(const std::vector<double> & s, const std::vector<int> & gridSize,
   const std::map<int, int> & graphIdx, int lidx, int radius,
   Graph & G)
@@ -381,4 +384,67 @@ void computeIncidence(Graph & G)
     G.IV[G.E[i][0]].push_back(G.E[i][1]);
     G.IV[G.E[i][1]].push_back(G.E[i][0]);
   }
+}
+
+std::vector<float> permute(const std::vector<float> & a, int p)
+{
+  int N = (int)a.size();
+  std::vector<int> idx(N, 0);
+  std::vector<float> ret(N, 0);
+  int base = N;
+  for (size_t i = 0; i < N; i++) {
+    idx[i] = p % base;
+    p = p / base;
+  }
+  std::vector<bool> taken(N, false);
+  for (int i = 0; i < N; i++) {
+    int cnt = 0;
+    for (int j = 0; j < N; j++) {
+      if (taken[j]) {
+        continue;
+      }
+      if (cnt == idx[i]) {
+        ret[j] = a[i];
+        taken[j] = true;
+        break;
+      }
+      cnt++;
+    }
+  }
+  return ret;
+}
+
+Eigen::Vector3f toVector3f(const std::vector<float> & a)
+{
+  Eigen::Vector3f e;
+  for (int i = 0; i < 3; i++) {
+    e[i] = a[i];
+  }
+  return e;
+}
+
+void mirrorGraphCubic(Graph & G)
+{
+  //mirror each edge 6 times
+  int nPerm = 6;
+  int dim = 3;
+  int nEdges = (int)G.E.size();
+  for (int i = 0; i < nEdges; i++) {
+    std::vector<float> v1(dim), v2(dim);
+    for (int p = 0; p < nPerm; p++) {
+      eigen2vector(G.V[G.E[i][0]], v1);
+      eigen2vector(G.V[G.E[i][1]], v2);
+      v1 = permute(v1, p);
+      v2 = permute(v2, p);
+      int vidx = G.V.size();
+      G.V.push_back(toVector3f(v1));
+      G.V.push_back(toVector3f(v2));
+      std::vector<int> edge(2, 0);
+      edge[0] = vidx;
+      edge[1] = vidx + 1;
+      G.E.push_back(edge);
+    }
+  }
+  
+  //mirror new edges 8 times.
 }

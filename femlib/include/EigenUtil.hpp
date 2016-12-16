@@ -10,8 +10,10 @@ Eigen::Matrix3Xd assemble3n(const std::vector<Eigen::Vector3d> & a);
 
 Eigen::VectorXd assemblex(const std::vector<Eigen::Vector3d> & a, int dim = 2);
 
+void eigen2vector(const Eigen::VectorXf & ev, std::vector<float> & v);
 void eigen2vector(const Eigen::VectorXd & ev, std::vector<double> & v);
 void vector2eigen(const std::vector<double> & v, Eigen::VectorXd & ev);
+void vector2eigen(const std::vector<float> & v, Eigen::VectorXf & ev);
 ///@brief write sparse matrix in matlab format such that one can copy paste
 ///into matlab workspace
 void write_matlab(std::ostream &output, const char *variable_name,

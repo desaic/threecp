@@ -21,6 +21,14 @@ assemblex(const std::vector<Eigen::Vector3d> & a, int dim)
   return x;
 }
 
+void eigen2vector(const Eigen::VectorXf & ev, std::vector<float> & v)
+{
+  assert(ev.rows() == (int)v.size());
+  for (unsigned int ii = 0; ii<v.size(); ii++) {
+    v[ii] = ev[ii];
+  }
+}
+
 void eigen2vector(const Eigen::VectorXd & ev, std::vector<double> & v)
 {
   assert(ev.rows() == (int)v.size());
@@ -37,6 +45,13 @@ void vector2eigen(const std::vector<double> & v, Eigen::VectorXd & ev)
   }
 }
 
+void vector2eigen(const std::vector<float> & v, Eigen::VectorXf & ev)
+{
+  assert(ev.rows() == (int)v.size());
+  for (unsigned int ii = 0; ii<v.size(); ii++) {
+    ev[ii] = v[ii];
+  }
+}
 
 void write_matlab(std::ostream &output, const char *variable_name,
                   const Eigen::SparseMatrix<double> & M)
