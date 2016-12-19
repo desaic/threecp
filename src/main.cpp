@@ -33,6 +33,46 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+void applyModifiers(const ConfigFile & conf, std::vector<double> & s, 
+  std::vector<int> & gridSize)
+{
+  bool flip = false;
+  bool mirror = false;
+  bool repeat = false;
+  bool cutTet = false;
+  bool makePillar = false;
+  conf.getBool("makePillar", makePillar);
+  conf.getBool("mirror", mirror);
+  conf.getBool("flip", flip);
+  conf.getBool("repeat", repeat);
+  conf.getBool("cutTet", cutTet);
+
+  if (flip) {
+    for (size_t j = 0; j < s.size(); j++) {
+      if (s[j] > 0.5) {
+        s[j] = 0;
+      }
+      else {
+        s[j] = 1;
+      }
+    }
+  }
+
+  if (mirror) {
+    s = mirrorOrthoStructure(s, gridSize);
+  }
+  if (repeat) {
+    s = mirrorOrthoStructure(s, gridSize);
+  }
+  if (makePillar) {
+    std::vector<double> support = addPillar(s, gridSize);
+    s = support;
+  }
+  if (cutTet) {
+    getCubicTet(s, gridSize);
+  }
+}
+
 void readRenderConfig(const ConfigFile & conf, Render * render)
 {
   std::vector<std::string> trigfiles = conf.getStringVector("trigmeshes");
@@ -47,25 +87,15 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     render->trigs.push_back(tm);
     in.close();
   }
-
-  bool mirror = false;
+ 
   bool saveObj = false;
-  bool flip = false;
-  bool repeat = false;
   bool toGraph = false;
-  bool cutTet = false;
   bool convertSkel = false;
   bool saveTxt = false;
-  bool makePillar = false;
 
   conf.getBool("convertSkel", convertSkel);
   conf.getBool("saveObj", saveObj);
-  conf.getBool("makePillar", makePillar);
-  conf.getBool("mirror", mirror);
-  conf.getBool("flip", flip);
-  conf.getBool("repeat", repeat);
   conf.getBool("toGraph", toGraph);
-  conf.getBool("cutTet", cutTet);
   conf.getBool("saveTxt", saveTxt);
 
   if (convertSkel) {
@@ -79,49 +109,30 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
   Graph G;
   std::vector<std::string> voxFiles = conf.getStringVector("voxfiles");
   std::cout << "vox file " << voxFiles.size() << "\n";
+  std::vector<int> gridSize;
+  std::vector<double> s_all;
+  ElementRegGrid * grid = new ElementRegGrid();
   for (size_t i = 0; i < voxFiles.size(); i++) {
     FileUtilIn in;
     in.open(voxFiles[i]);
     if (!in.good()) {
       continue;
     }
-    std::vector<int> gridSize;
     std::vector<double> s;
-    ElementRegGrid * grid = new ElementRegGrid();
+
+    std::cout << "vox file " << voxFiles[i] << "\n";
     loadBinaryStructure(voxFiles[i], s, gridSize);
     //loadBinDouble(voxFiles[i], s, gridSize);
-    //
-    if (flip) {
-      for (size_t j = 0; j < s.size(); j++) {
-        if (s[j] > 0.5) {
-          s[j] = 0;
-        }
-        else {
-          s[j] = 1;
-        }
-      }
-    }
-    std::cout << "vox file " << voxFiles[i] << "\n";
-    if (mirror) {
-      s = mirrorOrthoStructure(s, gridSize);
-    }
-    if (repeat) {
-      s = mirrorOrthoStructure(s, gridSize);
-    }
-    if (makePillar) {
-      std::vector<double> support = addPillar(s, gridSize);
-      s = support;
-    }
-    if (cutTet) {
-      getCubicTet(s, gridSize);
-    }
-    if (saveTxt) {
+
+    applyModifiers(conf, s, gridSize);
+
+    if (saveTxt && (i == 0) ) {
       FileUtilOut out("structure.txt");
       printIntStructure(s.data(), gridSize, out.out);
       out.close();
     }
 
-    if (toGraph) {
+    if (toGraph && (i == 0)) {
       float eps = 0.06f;
       voxToGraph(s, gridSize, G);
       //contractVertDegree2(G, eps);
@@ -129,23 +140,31 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
       contractPath(G, 0.1);
       saveGraph("skelGraph.txt", G);
     }
-    assignGridMat(s, gridSize, grid);
+    
     std::cout << "Grid size " << gridSize[0] << " " << gridSize[1] << " " << gridSize[2] << ".\n";
-    if (i == 0) {
-      render->updateGrid(s, gridSize);
-    }
-    if (saveObj && i == 0) {
-      TrigMesh tm;
-      hexToTrigMesh(grid, &tm);
-      std::string outfile = voxFiles[i] + ".obj";
-      tm.save_obj(outfile.c_str());
-    }
-
-    render->meshes.push_back(grid);
     in.close();
+
+    if (i == 0) {
+      s_all.resize(s.size(), 0);
+    }
+    for (int j = 0; j < (int)s.size(); j++) {
+      s_all[j] += 0.25 * (1+i) * s[j];
+    }
   }
 
+  if (saveObj) {
+    TrigMesh tm;
+    hexToTrigMesh(grid, &tm);
+    std::string outfile = voxFiles[0] + ".obj";
+    tm.save_obj(outfile.c_str());
+  }
+  
+  assignGridMat(s_all, gridSize, grid);
+  render->meshes.push_back(grid);
+  render->updateGrid(s_all, gridSize);
+
   std::string graphFile = conf.getString("graph");
+
   if (graphFile.size() > 0) {
     loadGraph(graphFile, render->g);
     if (conf.hasOpt("templateParam")) {

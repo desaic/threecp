@@ -450,6 +450,9 @@ void mirrorGraphCubic(Graph & G)
   int nPerm = 6;
   int dim = 3;
   int nEdges = (int)G.E.size();
+  for (size_t i = 0; i < G.V.size(); i++) {
+    G.V[i] *= 0.5;
+  }
   //the first permutation is the original graph. Skip it.
   for (int i = 0; i < nEdges; i++) {
     std::vector<float> v1(dim), v2(dim);

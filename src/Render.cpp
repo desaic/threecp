@@ -25,7 +25,6 @@ void Render::updateGrid(const std::vector<double> & s, const std::vector<int> & 
       cnt++;
     }
   }
-  
 }
 
 void Render::elementMeshEvent(int idx)

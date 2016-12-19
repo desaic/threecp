@@ -595,7 +595,8 @@ void assignGridMat(const std::vector<double> & s,
     }
     else {
       e.push_back(grid->e[i]);
-      color.push_back(s[i] * grid->color[i]);
+      Eigen::Vector3f c = s[i] * grid->color[i];
+      color.push_back(c);
     }
   }
   grid->color = color;

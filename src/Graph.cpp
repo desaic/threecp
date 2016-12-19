@@ -66,7 +66,9 @@ void loadGraphParam(std::string filename, Graph & g)
       if (idx >= (int)params[0].size()) {
         break;
       }
-      g.V[i][j] = params[0][idx];
+      //scale graph to 2x.
+      //graph param is scaled back to [0 0.5] in input.
+      g.V[i][j] = 2 * params[0][idx];
       idx++;
     }
   }
