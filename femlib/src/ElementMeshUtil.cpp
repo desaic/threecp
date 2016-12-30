@@ -586,6 +586,7 @@ void assignGridMat(const std::vector<double> & s,
   const std::vector<int> & gridSize, ElementRegGrid * grid)
 {
   double thresh = 1e-2;
+  double eps = 1e-5;
   grid->resize(gridSize[0], gridSize[1], gridSize[1]);
   std::vector<Element* > e;
   std::vector<Eigen::Vector3f> color;
@@ -596,6 +597,15 @@ void assignGridMat(const std::vector<double> & s,
     else {
       e.push_back(grid->e[i]);
       Eigen::Vector3f c = s[i] * grid->color[i];
+      if (s[i] < 2-eps) {
+        c = Eigen::Vector3f(0.5, 0.5, 0.8);
+      }
+      else if (s[i] < 3 - eps) {
+        c = Eigen::Vector3f(0.8, 0.5, 0.5);
+      }
+      else {
+        c = Eigen::Vector3f(0.5, 0.8, 0.5);
+      }
       color.push_back(c);
     }
   }

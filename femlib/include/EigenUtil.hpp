@@ -9,7 +9,7 @@
 Eigen::Matrix3Xd assemble3n(const std::vector<Eigen::Vector3d> & a);
 
 Eigen::VectorXd assemblex(const std::vector<Eigen::Vector3d> & a, int dim = 2);
-
+Eigen::Vector3d floatToEigen3d(const float * a);
 void eigen2vector(const Eigen::VectorXf & ev, std::vector<float> & v);
 void eigen2vector(const Eigen::VectorXd & ev, std::vector<double> & v);
 void vector2eigen(const std::vector<double> & v, Eigen::VectorXd & ev);

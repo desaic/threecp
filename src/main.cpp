@@ -11,6 +11,7 @@
 #include "GraphUtil.hpp"
 #include "linmath.h"
 #include "gui.hpp"
+#include "ParametricStructure3D.hpp"
 #include "TrigMesh.hpp"
 #include "VoxelIO.hpp"
 
@@ -57,6 +58,18 @@ void applyModifiers(const ConfigFile & conf, std::vector<double> & s,
       }
     }
   }
+
+  Cuboid cuboid;
+  cuboid.x0[0] = 1;
+  cuboid.x0[1] = 1;
+  cuboid.x0[2] = 0.6;
+  cuboid.x1[0] = 0.7;
+  cuboid.x1[1] = 0.7;
+  cuboid.x1[2] = 0.0;
+  cuboid.r[0] = 0.2;
+  cuboid.r[1] = 0.02;
+  cuboid.theta = -0.78;
+  //drawCuboid(cuboid, s, gridSize, 1);
 
   if (mirror) {
     s = mirrorOrthoStructure(s, gridSize);
@@ -148,21 +161,19 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
       s_all.resize(s.size(), 0);
     }
     for (int j = 0; j < (int)s.size(); j++) {
-      s_all[j] += 0.25 * (1+i) * s[j];
+      s_all[j] += (1+i) * s[j];
     }
   }
-
+  
+  assignGridMat(s_all, gridSize, grid);
+  render->meshes.push_back(grid);
+  render->updateGrid(s_all, gridSize);
   if (saveObj) {
     TrigMesh tm;
     hexToTrigMesh(grid, &tm);
     std::string outfile = voxFiles[0] + ".obj";
     tm.save_obj(outfile.c_str());
   }
-  
-  assignGridMat(s_all, gridSize, grid);
-  render->meshes.push_back(grid);
-  render->updateGrid(s_all, gridSize);
-
   std::string graphFile = conf.getString("graph");
 
   if (graphFile.size() > 0) {

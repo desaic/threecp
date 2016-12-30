@@ -21,6 +21,13 @@ assemblex(const std::vector<Eigen::Vector3d> & a, int dim)
   return x;
 }
 
+Eigen::Vector3d floatToEigen3d(const float * a)
+{
+  Eigen::Vector3d v;
+  v << a[0], a[1], a[2];
+  return v;
+}
+
 void eigen2vector(const Eigen::VectorXf & ev, std::vector<float> & v)
 {
   assert(ev.rows() == (int)v.size());
