@@ -380,8 +380,8 @@ void copyRayBuffers(ShaderBuffer & buf, PickEvent & event, ElementMesh * em)
 
 void Render::copyGraphBuffers()
 {
-  Eigen::Vector3f color;
-  color << 0.7, 0.9, 0.7;
+  Eigen::Vector3f basecolor;
+  basecolor << 0.7, 1, 0.7;
   int nTrig = 12;
   int dim = 3;
   if (g.E.size() == 0) {
@@ -399,6 +399,7 @@ void Render::copyGraphBuffers()
     int v2 = g.E[i][1];
     Eigen::Vector3d c1 = g.V[v1].cast<double>();
     Eigen::Vector3d c2 = g.V[v2].cast<double>();
+    Eigen::Vector3f color = ((i + 1) / (float)g.E.size()) * basecolor;
     cnt += addLine(c1, c2, color, v + cnt, n + cnt, c + cnt);
   }
 
