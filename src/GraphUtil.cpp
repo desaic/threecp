@@ -490,5 +490,16 @@ void mirrorGraphCubic(Graph & G)
       G.E.push_back(edge);
     }
   }
+}
 
+void separateEdges(Graph & G)
+{
+  std::vector<Eigen::Vector3f> V(G.E.size() * 2);
+  for (size_t i = 0; i < G.E.size(); i++) {
+    V[2 * i] = G.V[G.E[i][0]];
+    V[2 * i + 1] = G.V[G.E[i][1]];
+    G.E[i][0] = 2 * i;
+    G.E[i][1] = 2 * i + 1;
+  }
+  G.V = V;
 }

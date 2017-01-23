@@ -587,7 +587,7 @@ void assignGridMat(const std::vector<double> & s,
 {
   double thresh = 1e-2;
   double eps = 1e-5;
-  grid->resize(gridSize[0], gridSize[1], gridSize[1]);
+  grid->resize(gridSize[0], gridSize[1], gridSize[2]);
   std::vector<Element* > e;
   std::vector<Eigen::Vector3f> color;
   for (size_t i = 0; i < s.size(); i++) {

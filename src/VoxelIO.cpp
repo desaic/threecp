@@ -91,7 +91,6 @@ void loadBinaryStructure(const std::string & filename,
   }
 }
 
-
 std::vector<double> mirrorOrthoStructure(const std::vector<double> &s, std::vector<int> & gridSize)
 {
   std::vector<int> newSize = gridSize;
@@ -117,6 +116,35 @@ std::vector<double> mirrorOrthoStructure(const std::vector<double> &s, std::vect
         if (k0 >= gridSize[2]) {
           k0 = 2 * gridSize[2] - k0 - 1;
         }
+        int oldIdx = gridToLinearIdx(i0, j0, k0, gridSize);
+        t[newIdx] = s[oldIdx];
+      }
+    }
+  }
+  gridSize = newSize;
+  return t;
+}
+
+std::vector<double> repeatStructure(const std::vector<double> &s, std::vector<int> & gridSize,
+  int nx, int ny, int nz)
+{
+  std::vector<int> newSize = gridSize;
+  newSize[0] *= nx;
+  newSize[1] *= ny;
+  newSize[2] *= nz;
+  int nEle = 1;
+  for (size_t i = 0; i < newSize.size(); i++) {
+    nEle *= newSize[i];
+  }
+
+  std::vector<double> t(nEle);
+  for (int i = 0; i < newSize[0]; i++) {
+    for (int j = 0; j < newSize[1]; j++) {
+      for (int k = 0; k < newSize[2]; k++) {
+        int newIdx = gridToLinearIdx(i, j, k, newSize);
+        int i0 = i % gridSize[0];
+        int j0 = j % gridSize[1];
+        int k0 = k % gridSize[2];
         int oldIdx = gridToLinearIdx(i0, j0, k0, gridSize);
         t[newIdx] = s[oldIdx];
       }

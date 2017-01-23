@@ -75,7 +75,7 @@ void applyModifiers(const ConfigFile & conf, std::vector<double> & s,
     s = mirrorOrthoStructure(s, gridSize);
   }
   if (repeat) {
-    s = mirrorOrthoStructure(s, gridSize);
+    s = repeatStructure(s, gridSize, 1,2,1);
   }
   if (makePillar) {
     std::vector<double> support = addPillar(s, gridSize);
@@ -146,7 +146,7 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     }
 
     if (toGraph && (i == 0)) {
-      float eps = 0.06f;
+      float eps = 0.12f;
       voxToGraph(s, gridSize, G);
       //contractVertDegree2(G, eps);
       mergeCloseVerts(G, eps);
@@ -165,14 +165,16 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     }
   }
   
-  assignGridMat(s_all, gridSize, grid);
-  render->meshes.push_back(grid);
-  render->updateGrid(s_all, gridSize);
-  if (saveObj) {
-    TrigMesh tm;
-    hexToTrigMesh(grid, &tm);
-    std::string outfile = voxFiles[0] + ".obj";
-    tm.save_obj(outfile.c_str());
+  if (voxFiles.size() > 0) {
+    assignGridMat(s_all, gridSize, grid);
+    render->meshes.push_back(grid);
+    render->updateGrid(s_all, gridSize);
+    if (saveObj) {
+      TrigMesh tm;
+      hexToTrigMesh(grid, &tm);
+      std::string outfile = voxFiles[0] + ".obj";
+      tm.save_obj(outfile.c_str());
+    }
   }
   std::string graphFile = conf.getString("graph");
 
@@ -186,6 +188,13 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     conf.getBool("mirrorgraph", mirrorgraph);
     if (mirrorgraph) {
       mirrorGraphCubic(render->g);
+    }
+
+    bool sep = false;
+    conf.getBool("sep", sep);
+    if (sep) {
+      separateEdges(render->g);
+      saveGraph("sepGraph.txt", render->g);
     }
   }
 

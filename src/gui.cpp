@@ -44,7 +44,7 @@ void MouseButtonCallback(GLFWwindow * window, int button, int action, int modifi
         glfwGetCursorPos(window,&xpos, &ypos);
         viewergui->render->xpos0 = xpos;
         viewergui->render->ypos0 = ypos;
-        viewergui->render->pick(xpos, ypos);
+        //viewergui->render->pick(xpos, ypos);
       }
       else if (action == GLFW_RELEASE) {
         viewergui->render->captureMouse = false;
@@ -211,7 +211,10 @@ void ViewerGUI::init()
   IntBox<int> * sliceWidget = gui->addVariable("Slice", slice);
   sliceWidget->setSpinnable(true);
   sliceWidget->setMinMaxValues(0, 64);
-
+  IntBox<int> * paramIdxWidget = gui->addVariable("param", paramIdx);
+  paramIdxWidget->setTooltip("Parameter index");
+  paramIdxWidget->setSpinnable(true);
+  paramIdxWidget->setMinMaxValues(0, 100);
   //gui->addVariable("float", fvar)->setTooltip("Test.");
   //gui->addVariable("double", dvar)->setSpinnable(true);
 
