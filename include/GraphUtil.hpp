@@ -34,4 +34,7 @@ void mergeCloseVerts(Graph & G, float eps);
 void rmIsolatedVerts(Graph & G);
 
 void mirrorGraphCubic(Graph & G);
+
+void separateEdges(Graph & G);
+
 #endif

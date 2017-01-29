@@ -75,7 +75,7 @@ void applyModifiers(const ConfigFile & conf, std::vector<double> & s,
     s = mirrorOrthoStructure(s, gridSize);
   }
   if (repeat) {
-    s = repeatStructure(s, gridSize, 1,2,1);
+    s = repeatStructure(s, gridSize, 2,2,1);
   }
   if (makePillar) {
     std::vector<double> support = addPillar(s, gridSize);

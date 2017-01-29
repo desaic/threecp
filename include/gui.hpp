@@ -14,7 +14,7 @@ public:
   };
   
   bool bvar;
-  int slice0, slice;
+  int slice0, slice, paramIdx;
   double dvar;
   float fvar;
   nanogui::Color colval;
@@ -22,6 +22,7 @@ public:
   std::string strval;
 
   ViewerGUI() : bvar(true), slice0(0), slice(0), 
+    paramIdx(0),
     dvar(3.14), fvar(3.14f),
     colval(0.5f, 0.5f, 0.7f, 1.f) ,
     enumval(Item2),  strval("string"),
