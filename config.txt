@@ -1,4 +1,28 @@
 #trigmeshes list 1
 #data/bunny_sr.obj
 voxfiles list 1
-data/g28.bin
+#tmp.bin
+D:\workspace\github\topoOpt\projects\topology_microstructure\wd\tmp.bin
+#D:\workspace\github\topoOpt\projects\topology_microstructure\wd\optResult\7732.bin
+#D:\workspace\github\topoOpt\projects\topology_microstructure\wd\prints\7727.bin
+#D:\workspace\github\topoOpt\projects\topology_microstructure\wd\prints\7728.bin
+#D:\workspace\github\topoOpt\projects\topology_microstructure\wd\stOut/0.bin
+#D:\workspace\github\topoOpt\projects\topology_microstructure\data\64\5482.bin
+#data/full32.bin
+#data/density.bin
+#graph skelGraph7242.txt
+#graph D:\workspace\GitHub\topoOpt\projects\topology_microstructure\wd\graph-npr22.txt
+graph D:\workspace\github\topoOpt\projects\topology_microstructure\wd\skelGraph7242.txt
+#templateParam D:\workspace\github\topoOpt\projects\topology_microstructure\wd\tp7242.txt
+#mirrorgraph true
+mirror true
+#saveObj true
+#repeat true
+#flip true
+#toGraph true
+#cutTet true
+#saveTxt true
+#makePillar true
+#convertSkel true
+#skelFile skel5482.txt
+#sep true
