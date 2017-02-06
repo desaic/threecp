@@ -15,6 +15,8 @@
 #include "TrigMesh.hpp"
 #include "VoxelIO.hpp"
 
+void loadCuboids(std::string filename, std::vector<Cuboid> & cuboids);
+
 void readVoxGraph(std::string filename, std::vector<int> & verts,
   std::vector<std::vector<int > > & edges)
 {
@@ -265,4 +267,46 @@ int main(int argc, char * argv[])
   glfwDestroyWindow(window);
   glfwTerminate();
   exit(EXIT_SUCCESS);
+}
+
+void loadCuboids(std::string filename, std::vector<Cuboid> & cuboids)
+{
+  //list of vertex positions followed by list of beam parameters.
+  //each beam has two vertices. There are 6N numbers for N beam coordinates and 3N numbers for beam sizing
+  //and orientation.
+  FileUtilIn in(filename);
+  if (!in.good()) {
+    return;
+  }
+  std::vector<std::vector<double> > params;
+  in.readArr2d(params);
+  in.close();
+  if (params.size() == 0) {
+    return;
+  }
+  int nParam = (int)params[0].size();
+  int dim = 3;
+  //read positions
+  for (size_t i = 0; i < cuboids.size(); i++) {
+    for (int j = 0; j < dim; j++) {
+      int idx = 6 * i + j + 3;
+      if (idx >= (int)params[0].size()) {
+        break;
+      }
+      //scale graph to 2x.
+      //graph param is scaled back to [0 0.5] in input.
+      cuboids[i].x0[j] = 2 * params[0][6 * i + j];
+      cuboids[i].x1[j] = 2 * params[0][6 * i + j + 3];
+    }
+  }
+  //read sizes
+  for (size_t i = 0; i < cuboids.size(); i++) {
+    int idx = 6 * cuboids.size() + 3 * i + 2;
+    if (idx >= (int)params[0].size()) {
+      break;
+    }
+    cuboids[i].r[0] = params[0][6 * cuboids.size() + 3 * i];
+    cuboids[i].r[1] = params[0][6 * cuboids.size() + 3 * i + 1];
+    cuboids[i].theta = params[0][6 * cuboids.size() + 3 * i + 2];
+  }
 }
