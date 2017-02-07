@@ -330,6 +330,46 @@ int addLine(Eigen::Vector3d x0, Eigen::Vector3d x1,
   return cnt;
 }
 
+int addCuboid(Cuboid & cuboid,
+  const Eigen::Vector3f & color,
+  GLfloat * v, GLfloat * n, GLfloat * c)
+{
+  std::vector < Eigen::Vector3d> verts(8);
+  Eigen::Vector3d x0(cuboid.x0[0], cuboid.x0[1], cuboid.x0[2]);
+  Eigen::Vector3d x1(cuboid.x1[0], cuboid.x1[1], cuboid.x1[2]);
+  Eigen::Vector3d x = x1 - x0;
+  float len = x.norm();
+  if (len < 1e-10) {
+    //draw something random if d is nearly 0.
+    x = Eigen::Vector3d(1e-5, 1e-5, 1e-5);
+    len = x.norm();
+  }
+  Eigen::Vector3d y(0, 1, 0);
+  if (std::abs(x[1]) > 0.9) {
+    y = Eigen::Vector3d(1, 0, 0);
+  }
+  Eigen::Vector3d z = x.cross(y);
+  z.normalize();
+  y = z.cross(x);
+  Eigen::Matrix3d R = Eigen::AngleAxisd(cuboid.theta, x).toRotationMatrix();
+  y = R*y;
+  z = R*z;
+
+  float dy = cuboid.r[0];
+  float dz = cuboid.r[1];
+  verts[0] = x0 - dy * y - dz * z;
+  verts[1] = x0 - dy * y + dz * z;
+  verts[2] = x0 + dy * y - dz * z;
+  verts[3] = x0 + dy * y + dz * z;
+  verts[4] = x0 + len * x - dy * y - dz * z;
+  verts[5] = x0 + len * x - dy * y + dz * z;
+  verts[6] = x0 + len * x + dy * y - dz * z;
+  verts[7] = x0 + len * x + dy * y + dz * z;
+
+  int cnt = addCube(verts, color, v, n, c);
+  return cnt;
+}
+
 void copyRayBuffers(ShaderBuffer & buf, PickEvent & event, ElementMesh * em)
 {
   
@@ -386,7 +426,7 @@ void Render::copyGraphBuffers()
   basecolor[1] << 1, 0.2, 0.2;
   int nTrig = 12;
   int dim = 3;
-  if (g.E.size() == 0) {
+  if (cuboids.size() == 0) {
     return;
   }
   int nFloat = nTrig * g.E.size() * 3 * dim;
@@ -396,14 +436,10 @@ void Render::copyGraphBuffers()
   float len = 2;
   int cnt = 0;
 
-  for (size_t i = 0; i < g.E.size(); i++) {
-    int v1 = g.E[i][0];
-    int v2 = g.E[i][1];
-    Eigen::Vector3d c1 = g.V[v1].cast<double>();
-    Eigen::Vector3d c2 = g.V[v2].cast<double>();
-    float a = (i / (float)(g.E.size()-1));
+  for (size_t i = 0; i < cuboids.size(); i++) {
+    float a = (i / (float)(cuboids.size()-1));
     Eigen::Vector3f color =  a * basecolor[1] + (1-a) * basecolor[0];
-    cnt += addLine(c1, c2, color, v + cnt, n + cnt, c + cnt);
+    cnt += addCuboid(cuboids[i], color, v + cnt, n + cnt, c + cnt);
   }
 
   glBindVertexArray(gbuf.vao);
@@ -506,7 +542,7 @@ void Render::init()
     initTrigBuffers(trigs[i]);
   }
   initRayBuffers();
-  if (g.E.size() > 0) {
+  if (cuboids.size() > 0) {
     initGraphBuffers();
   }
 }

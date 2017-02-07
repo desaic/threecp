@@ -182,10 +182,6 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
 
   if (graphFile.size() > 0) {
     loadGraph(graphFile, render->g);
-    if (conf.hasOpt("templateParam")) {
-      std::string tpFile = conf.getString("templateParam");
-      loadGraphParam(tpFile, render->g);
-    }
     bool mirrorgraph = false;
     conf.getBool("mirrorgraph", mirrorgraph);
     if (mirrorgraph) {
@@ -199,7 +195,10 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
       saveGraph("sepGraph.txt", render->g);
     }
   }
-
+  if (conf.hasOpt("templateParam")) {
+    std::string tpFile = conf.getString("templateParam");
+    loadCuboids(tpFile, render->cuboids);
+  }
 }
 
 int main(int argc, char * argv[])
@@ -286,6 +285,8 @@ void loadCuboids(std::string filename, std::vector<Cuboid> & cuboids)
   }
   int nParam = (int)params[0].size();
   int dim = 3;
+  int paramPerCube = 9;
+  cuboids.resize(nParam / paramPerCube);
   //read positions
   for (size_t i = 0; i < cuboids.size(); i++) {
     for (int j = 0; j < dim; j++) {

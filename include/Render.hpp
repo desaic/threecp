@@ -3,6 +3,7 @@
 #include "Camera.hpp"
 #include <nanogui\nanogui.h>
 #include "Graph.hpp"
+#include "ParametricStructure3D.hpp"
 #include "RegGrid.hpp"
 #include <set>
 
@@ -87,6 +88,7 @@ public:
   std::vector<ShaderBuffer> buffers;
 
   Graph g;
+  std::vector<Cuboid> cuboids;
   ShaderBuffer gbuf;
 
   PickEvent pickEvent;
