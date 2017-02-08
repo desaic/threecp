@@ -283,31 +283,33 @@ void loadCuboids(std::string filename, std::vector<Cuboid> & cuboids)
   if (params.size() == 0) {
     return;
   }
-  int nParam = (int)params[0].size();
+  int pidx = params.size() - 1;
+  int nParam = (int)params[pidx].size();
   int dim = 3;
   int paramPerCube = 9;
   cuboids.resize(nParam / paramPerCube);
+
   //read positions
   for (size_t i = 0; i < cuboids.size(); i++) {
     for (int j = 0; j < dim; j++) {
       int idx = 6 * i + j + 3;
-      if (idx >= (int)params[0].size()) {
+      if (idx >= (int)params[pidx].size()) {
         break;
       }
       //scale graph to 2x.
       //graph param is scaled back to [0 0.5] in input.
-      cuboids[i].x0[j] = 2 * params[0][6 * i + j];
-      cuboids[i].x1[j] = 2 * params[0][6 * i + j + 3];
+      cuboids[i].x0[j] = 2 * params[pidx][6 * i + j];
+      cuboids[i].x1[j] = 2 * params[pidx][6 * i + j + 3];
     }
   }
   //read sizes
   for (size_t i = 0; i < cuboids.size(); i++) {
     int idx = 6 * cuboids.size() + 3 * i + 2;
-    if (idx >= (int)params[0].size()) {
+    if (idx >= (int)params[pidx].size()) {
       break;
     }
-    cuboids[i].r[0] = params[0][6 * cuboids.size() + 3 * i];
-    cuboids[i].r[1] = params[0][6 * cuboids.size() + 3 * i + 1];
-    cuboids[i].theta = params[0][6 * cuboids.size() + 3 * i + 2];
+    cuboids[i].r[0] = 2 * params[pidx][6 * cuboids.size() + 3 * i];
+    cuboids[i].r[1] = 2 * params[pidx][6 * cuboids.size() + 3 * i + 1];
+    cuboids[i].theta = params[pidx][6 * cuboids.size() + 3 * i + 2];
   }
 }

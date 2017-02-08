@@ -350,7 +350,7 @@ int addCuboid(Cuboid & cuboid,
   }
   Eigen::Vector3d z = x.cross(y);
   z.normalize();
-  y = z.cross(x);
+  y = z.cross(x)/len;
   Eigen::Matrix3d R = Eigen::AngleAxisd(cuboid.theta, x).toRotationMatrix();
   y = R*y;
   z = R*z;
@@ -361,10 +361,10 @@ int addCuboid(Cuboid & cuboid,
   verts[1] = x0 - dy * y + dz * z;
   verts[2] = x0 + dy * y - dz * z;
   verts[3] = x0 + dy * y + dz * z;
-  verts[4] = x0 + len * x - dy * y - dz * z;
-  verts[5] = x0 + len * x - dy * y + dz * z;
-  verts[6] = x0 + len * x + dy * y - dz * z;
-  verts[7] = x0 + len * x + dy * y + dz * z;
+  verts[4] = x0 + x - dy * y - dz * z;
+  verts[5] = x0 + x - dy * y + dz * z;
+  verts[6] = x0 + x + dy * y - dz * z;
+  verts[7] = x0 + x + dy * y + dz * z;
 
   int cnt = addCube(verts, color, v, n, c);
   return cnt;
