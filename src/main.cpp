@@ -308,8 +308,8 @@ void loadCuboids(std::string filename, std::vector<Cuboid> & cuboids)
     if (idx >= (int)params[pidx].size()) {
       break;
     }
-    cuboids[i].r[0] = 2 * params[pidx][6 * cuboids.size() + 3 * i];
-    cuboids[i].r[1] = 2 * params[pidx][6 * cuboids.size() + 3 * i + 1];
+    cuboids[i].r[0] = params[pidx][6 * cuboids.size() + 3 * i];
+    cuboids[i].r[1] = params[pidx][6 * cuboids.size() + 3 * i + 1];
     cuboids[i].theta = params[pidx][6 * cuboids.size() + 3 * i + 2];
   }
 }
