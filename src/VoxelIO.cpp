@@ -118,6 +118,10 @@ std::vector<double> mirrorOrthoStructure(const std::vector<double> &s, std::vect
         }
         int oldIdx = gridToLinearIdx(i0, j0, k0, gridSize);
         t[newIdx] = s[oldIdx];
+        //cut through view.
+        //if (i >= gridSize[0] && j >= gridSize[1] && k >= gridSize[2]) {
+        //  t[newIdx] = 0;
+        //}
       }
     }
   }
