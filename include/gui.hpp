@@ -26,6 +26,7 @@ public:
     dvar(3.14), fvar(3.14f),
     colval(0.5f, 0.5f, 0.7f, 1.f) ,
     enumval(Item2),  strval("string"),
+    prevIdx(0), frameCnt(0),
     screen(nullptr), window(0),
     render(0){}
   
@@ -43,10 +44,36 @@ public:
       }
     }
     render->drawContent();
+    if (frameCnt >= 30) {
+      frameCnt = 0;
+      std::string indexFile = "C:\\Users\\desaic\\Desktop\\demo\\index.txt";
+      std::ifstream idxIn(indexFile);
+      int idx = 0;
+      idxIn >> idx;
+      idxIn.close();
+      if (idx != prevIdx) {
+        prevIdx = idx;
+        std::string prefix = "C:\\Users\\desaic\\Desktop\\demo\\64\\";
+        std::string filename = prefix + std::to_string(idx) + ".bin";
+        std::cout << "File name " << filename;
+        Render * r = render;
+        if (r->emEvent.size() == 0) {
+          return;
+        }
+        if (filename.size() == 0) {
+          return;
+        }
+        r->emEvent[0].eventType = Render::OPEN_FILE_EVENT;
+        r->emEvent[0].filename = filename;
+      }
+    }
+    frameCnt++;
   }
   void ButtonCBOpen();
   void ButtonCBSave();
   void ButtonCBClear();
+  int prevIdx;
+  int frameCnt;
   nanogui::Screen *screen;
   GLFWwindow* window;
   Render * render;

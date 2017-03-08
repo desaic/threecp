@@ -140,9 +140,17 @@ void FramebufferSizeCallback(GLFWwindow *, int width, int height) {
 
 void ViewerGUI::ButtonCBOpen()
 {
-  std::string filename = file_dialog(
-  { { "bin", "Binary voxel data file" } }, false);
-  std::cout << "File dialog result: " << filename << std::endl;
+  //std::string filename = file_dialog(
+  //{ { "bin", "Binary voxel data file" } }, false);
+  //std::cout << "File dialog result: " << filename << std::endl;
+  std::string indexFile = "C:\\Users\\desaic\\Desktop\\demo\\index.txt";
+  std::ifstream idxIn(indexFile);
+  int idx = 0;
+  idxIn>> idx;
+  idxIn.close();
+  std::string prefix = "C:\\Users\\desaic\\Desktop\\demo\\64\\";
+  std::string filename = prefix + std::to_string(idx) + ".bin";
+  std::cout << "File name " << filename;
   Render * r = render;
   if (r->emEvent.size() == 0) {
     return;
