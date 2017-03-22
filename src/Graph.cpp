@@ -110,14 +110,18 @@ void saveGraphMesh(std::string filename, const Graph & g,
     Eigen::Vector3d axis[3];
     double xlen = (x1 - x0).norm();
     if (xlen < 1e-6) {
+      std::cout << "Short edge.\n";
       continue;
     }
+    if (axis[0][2] > 0.95) {
+      std::cout << "debug.";
+    }
     axis[0] = (x1 - x0)/xlen;
-    if (axis[0][1] < 0.95) {
-      axis[1] = Eigen::Vector3d(0, 1, 0);
+    if (std::abs(axis[0][1]) > 0.95) {
+      axis[1] = Eigen::Vector3d(0, 0, 1);
     }
     else {
-      axis[1] = Eigen::Vector3d(0, 0, 1);
+      axis[1] = Eigen::Vector3d(0, 1, 0);
     }
     axis[2] = axis[0].cross(axis[1]).normalized();
     axis[1] = axis[2].cross(axis[0]).normalized();
@@ -132,6 +136,11 @@ void saveGraphMesh(std::string filename, const Graph & g,
     Rot = Rot*Scale;
     for (int j = 0; j < (int)transformed.v.size(); j++) {
       transformed.v[j] = Rot*transformed.v[j] + x0;
+      //for (int k = 0; k < 3; k++) {
+      //  if (isnan(transformed.v[j][k])) {
+      //    std::cout << "debug\n";
+      //  }
+      //}
     }
     int i0 = outMesh.t.size();
     int i1 = i0 + transformed.t.size();
