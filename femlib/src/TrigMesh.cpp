@@ -14,6 +14,7 @@
 #include <string.h>
 #include "util.h"
 #include "ElementMesh.hpp"
+#include "FileUtil.hpp"
 
 void makeCube(TrigMesh & m, const Vector3s & mn,
     const Vector3s mx)
@@ -397,4 +398,42 @@ void TrigMesh::compute_norm()
   for(unsigned int ii=0; ii<v.size(); ii++) {
     n[ii].normalize();
   }
+}
+
+void savePly(TrigMesh * tm, std::string filename)
+{
+  FileUtilOut out(filename);
+  out.out << "ply\nformat ascii 1.0\nelement vertex " << tm->v.size() << "\n";
+  out.out << "property float x\nproperty float y\nproperty float z\n";
+  out.out << "property uchar red\nproperty uchar green\nproperty uchar blue\n";
+  out.out << "element face " << tm->t.size() << "\n";
+  out.out << "property list uchar int vertex_index\nend_header\n";
+  //compute average vertex color;
+  std::vector<Eigen::Vector3f> vcolor(tm->v.size(), Eigen::Vector3f::Zero());
+  
+  if (tm->tcolor.size() == tm->t.size()) {
+    std::vector<int> vcnt(tm->v.size(), 0);
+    for (size_t i = 0; i < tm->t.size(); i++) {
+      for (int j = 0; j < 3; j++) {
+        int vidx = tm->t[i][j];
+        vcolor[vidx] += tm->tcolor[i].row(j);
+        vcnt[vidx] ++;
+      }
+    }
+    for (size_t i = 0; i < tm->v.size(); i++) {
+      vcolor[i] = (1.0 / vcnt[i]) * vcolor[i];
+    }
+  }
+  else {
+    vcolor = std::vector<Eigen::Vector3f>(tm->v.size(), Eigen::Vector3f::Zero());
+  }
+
+  for (size_t i = 0; i < tm->v.size(); i++) {
+    out.out << tm->v[i][0] << " " << tm->v[i][1] << " " << tm->v[i][2] << " ";
+    out.out << (unsigned int)(vcolor[i][0] * 255) << " " << (unsigned int)(vcolor[i][1] * 255) << " " << (unsigned int)(vcolor[i][2] * 255) << "\n";
+  }
+  for (size_t i = 0; i < tm->t.size(); i++) {
+    out.out << "3 " << tm->t[i][0] << " " << tm->t[i][1] << " " << tm->t[i][2] << "\n";
+  }
+  out.close();
 }

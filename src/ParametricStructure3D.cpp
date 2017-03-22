@@ -566,3 +566,18 @@ mirrorCubicStructure(const std::vector<double> &s, const std::vector<int> & grid
   }
   return t;
 }
+
+void graphToCuboids(const Graph & g, std::vector<Cuboid> & cuboids)
+{
+  int dim = 3;
+  cuboids.resize(g.E.size());
+  for (int i = 0; i < (int)g.E.size(); i++) {
+    cuboids[i].r[0] = 0.03;
+    cuboids[i].r[1] = 0.03;
+    for (int j = 0; j < dim; j++) {
+      cuboids[i].x0[j] = g.V[g.E[i][0]][j];
+      cuboids[i].x1[j] = g.V[g.E[i][1]][j];
+    }
+    cuboids[i].theta = 0;
+  }
+}

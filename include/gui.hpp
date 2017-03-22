@@ -20,7 +20,8 @@ public:
   nanogui::Color colval;
   test_enum enumval;
   std::string strval;
-
+  std::string indexFile;
+  std::string database;
   ViewerGUI() : bvar(true), slice0(0), slice(0), 
     paramIdx(0),
     dvar(3.14), fvar(3.14f),
@@ -44,27 +45,28 @@ public:
       }
     }
     render->drawContent();
-    if (frameCnt >= 30) {
+    if (frameCnt >= 100) {
       frameCnt = 0;
-      std::string indexFile = "C:\\Users\\desaic\\Desktop\\demo\\index.txt";
       std::ifstream idxIn(indexFile);
-      int idx = 0;
-      idxIn >> idx;
-      idxIn.close();
-      if (idx != prevIdx) {
-        prevIdx = idx;
-        std::string prefix = "C:\\Users\\desaic\\Desktop\\demo\\64\\";
-        std::string filename = prefix + std::to_string(idx) + ".bin";
-        std::cout << "File name " << filename;
-        Render * r = render;
-        if (r->emEvent.size() == 0) {
-          return;
+      if (idxIn.good()) {
+        int idx = 0;
+        idxIn >> idx;
+        idxIn.close();
+        if (idx != prevIdx) {
+          prevIdx = idx;
+
+          std::string filename = database + std::to_string(idx) + ".bin";
+          std::cout << "File name " << filename;
+          Render * r = render;
+          if (r->emEvent.size() == 0) {
+            return;
+          }
+          if (filename.size() == 0) {
+            return;
+          }
+          r->emEvent[0].eventType = Render::OPEN_FILE_EVENT;
+          r->emEvent[0].filename = filename;
         }
-        if (filename.size() == 0) {
-          return;
-        }
-        r->emEvent[0].eventType = Render::OPEN_FILE_EVENT;
-        r->emEvent[0].filename = filename;
       }
     }
     frameCnt++;

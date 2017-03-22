@@ -44,6 +44,7 @@ void Render::elementMeshEvent(int idx)
   case OPEN_FILE_EVENT:
     
     loadBinaryStructure(emEvent[idx].filename, s, gridSize);
+    s = mirrorOrthoStructure(s, gridSize);
     if (gridSize.size() == 0) {
       break;
     }

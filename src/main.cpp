@@ -182,6 +182,10 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
 
   if (graphFile.size() > 0) {
     loadGraph(graphFile, render->g);
+    if (conf.hasOpt("templateParam")) {
+      std::string tpFile = conf.getString("templateParam");
+      loadGraphParam(tpFile, render->g);
+    }
     bool mirrorgraph = false;
     conf.getBool("mirrorgraph", mirrorgraph);
     if (mirrorgraph) {
@@ -192,13 +196,19 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     conf.getBool("sep", sep);
     if (sep) {
       separateEdges(render->g);
-      saveGraph("sepGraph.txt", render->g);
+      saveGraphSimple("sepGraph.txt", render->g);
     }
+    bool saveGMesh = false;
+    conf.getBool("saveGraphObj", saveGMesh);
+    if (saveGMesh) {
+      saveGraphMesh("graph.ply", render->g, 1);
+    }
+    graphToCuboids(render->g, render->cuboids);
   }
-  if (conf.hasOpt("templateParam")) {
-    std::string tpFile = conf.getString("templateParam");
-    loadCuboids(tpFile, render->cuboids);
-  }
+  //if (conf.hasOpt("templateParam")) {
+  //  std::string tpFile = conf.getString("templateParam");
+  //  loadCuboids(tpFile, render->cuboids);
+  //}
 }
 
 int main(int argc, char * argv[])
@@ -240,6 +250,10 @@ int main(int argc, char * argv[])
     return -1;
   }
   readRenderConfig(conf, render);
+  
+  gui->indexFile = conf.getString("indexFile");
+  gui->database = conf.getString("database");
+  
   render->loadShader("glsl/vs.txt", "glsl/fs.txt");
   render->init();
   double t0, t1;
@@ -298,8 +312,8 @@ void loadCuboids(std::string filename, std::vector<Cuboid> & cuboids)
       }
       //scale graph to 2x.
       //graph param is scaled back to [0 0.5] in input.
-      cuboids[i].x0[j] = 2 * params[pidx][6 * i + j];
-      cuboids[i].x1[j] = 2 * params[pidx][6 * i + j + 3];
+      cuboids[i].x0[j] =  params[pidx][6 * i + j];
+      cuboids[i].x1[j] =  params[pidx][6 * i + j + 3];
     }
   }
   //read sizes

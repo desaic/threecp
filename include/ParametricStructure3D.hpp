@@ -226,6 +226,8 @@ public:
 std::vector<double>
 mirrorCubicStructure(const std::vector<double> &s, const std::vector<int> & gridSize);
 
+void graphToCuboids(const Graph & g, std::vector<Cuboid> & cuboids);
+
 void drawCylinder(Cylinder3D & cy, std::vector<double> & arr,
   const std::vector<int> & gridSize, double val);
 

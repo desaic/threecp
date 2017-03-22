@@ -23,6 +23,8 @@ public:
   ///@brief triangles
   std::vector<Vector3i>t;
 
+  std::vector<Eigen::Matrix3f> tcolor;
+
   TrigMesh();
   TrigMesh(const std::vector<Vector3s>&_v,
       const std::vector<Vector3i>&_t);
@@ -54,5 +56,7 @@ void makeCube(TrigMesh & m, const Vector3s &mn,
 extern TrigMesh UNIT_CUBE;
 
 void adjlist(const TrigMesh & m, std::vector<std::vector<int> > & adjMat);
+
+void savePly(TrigMesh * tm, std::string filename);
 
 #endif

@@ -143,8 +143,10 @@ void ViewerGUI::ButtonCBOpen()
   //std::string filename = file_dialog(
   //{ { "bin", "Binary voxel data file" } }, false);
   //std::cout << "File dialog result: " << filename << std::endl;
-  std::string indexFile = "C:\\Users\\desaic\\Desktop\\demo\\index.txt";
   std::ifstream idxIn(indexFile);
+  if (!idxIn.good()) {
+    return;
+  }
   int idx = 0;
   idxIn>> idx;
   idxIn.close();
