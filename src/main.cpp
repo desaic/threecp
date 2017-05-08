@@ -120,13 +120,20 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     loadArr3dTxt(skelFile, sk, inputres);
     std::vector<int> skelSize(3, inputres);
     saveBinaryStructure("tmp.bin", sk, skelSize);
+    TrigMesh tm;
+    std::vector<int> gridSize(3, inputres);
+    ElementRegGrid * grid = new ElementRegGrid(inputres, inputres, inputres);
+    assignGridMat(sk, gridSize, grid);
+    hexToTrigMesh(grid, &tm);
+    tm.save_obj("skel.obj");
+
   }
   Graph G;
   std::vector<std::string> voxFiles = conf.getStringVector("voxfiles");
   std::cout << "vox file " << voxFiles.size() << "\n";
   std::vector<int> gridSize;
   std::vector<double> s_all;
-  ElementRegGrid * grid = new ElementRegGrid();
+  
   for (size_t i = 0; i < voxFiles.size(); i++) {
     FileUtilIn in;
     in.open(voxFiles[i]);
@@ -145,14 +152,15 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
       FileUtilOut out("structure.txt");
       printIntStructure(s.data(), gridSize, out.out);
       out.close();
+      saveBinaryStructure("tet.bin", s, gridSize);
     }
 
     if (toGraph && (i == 0)) {
-      float eps = 0.12f;
+      float eps = 0.09f;
       voxToGraph(s, gridSize, G);
       //contractVertDegree2(G, eps);
       mergeCloseVerts(G, eps);
-      contractPath(G, 0.1);
+      contractPath(G, 0.12);
       saveGraph("skelGraph.txt", G);
     }
     
@@ -166,16 +174,70 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
       s_all[j] += (1+i) * s[j];
     }
   }
-  
+  ElementRegGrid * grid = new ElementRegGrid();
   if (voxFiles.size() > 0) {
+    //first mesh is blue. 2nd is red. Common intersection is green.
     assignGridMat(s_all, gridSize, grid);
     render->meshes.push_back(grid);
     render->updateGrid(s_all, gridSize);
-    if (saveObj) {
+    if (saveObj && voxFiles.size()==1) {
       TrigMesh tm;
       hexToTrigMesh(grid, &tm);
       std::string outfile = voxFiles[0] + ".obj";
       tm.save_obj(outfile.c_str());
+    }
+    if (saveObj && voxFiles.size() > 1) {
+      std::vector<double> s(s_all.size(), 0);
+      TrigMesh tm;
+
+      for (size_t i = 0; i < s_all.size(); i++) {
+        if (s_all[i] < 1.9 && s_all[i]>0) {
+          s[i] = 1;
+        }
+      }
+
+      delete grid;
+      grid = new ElementRegGrid();
+      assignGridMat(s, gridSize, grid);
+      
+      hexToTrigMesh(grid, &tm);
+      std::string outfile = voxFiles[0] + ".obj";
+      tm.save_obj(outfile.c_str());
+
+      for (size_t i = 0; i < s_all.size(); i++) {
+        if (s_all[i] < 2.9 && s_all[i]>1) {
+          s[i] = 1;
+        }
+        else {
+          s[i] = 0;
+        }
+      }
+
+      delete grid;
+      grid = new ElementRegGrid();
+      assignGridMat(s, gridSize, grid);
+      
+      hexToTrigMesh(grid, &tm);
+      outfile = voxFiles[1] + ".obj";
+      tm.save_obj(outfile.c_str());
+
+      for (size_t i = 0; i < s_all.size(); i++) {
+        if (s_all[i] < 3.9 && s_all[i]>2) {
+          s[i] = 1;
+        }
+        else {
+          s[i] = 0;
+        }
+      }
+
+      delete grid;
+      grid = new ElementRegGrid();
+      assignGridMat(s, gridSize, grid);
+
+      hexToTrigMesh(grid, &tm);
+      outfile = "inter.obj";
+      tm.save_obj(outfile.c_str());
+
     }
   }
   std::string graphFile = conf.getString("graph");
@@ -205,10 +267,10 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     }
     graphToCuboids(render->g, render->cuboids);
   }
-  //if (conf.hasOpt("templateParam")) {
-  //  std::string tpFile = conf.getString("templateParam");
-  //  loadCuboids(tpFile, render->cuboids);
-  //}
+  if (conf.hasOpt("templateParam")) {
+    std::string tpFile = conf.getString("templateParam");
+    loadCuboids(tpFile, render->cuboids);
+  }
 }
 
 int main(int argc, char * argv[])

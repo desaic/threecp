@@ -104,6 +104,7 @@ public:
   void initGraphBuffers();
   void initRayBuffers();
   void copyEleBuffers(int idx);
+  void updateEleSlice(int idx);
   void copyGraphBuffers();
   void updateGrid(const std::vector<double> & s, const std::vector<int> & gridSize);
   void pick(double xpos, double ypos);

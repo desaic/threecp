@@ -60,7 +60,7 @@ void Render::elementMeshEvent(int idx)
     copyEleBuffers(idx);
     break;
   case MOVE_SLICE_EVENT:
-    copyEleBuffers(idx);
+    updateEleSlice(idx);
     break;
   }
 }
@@ -118,62 +118,6 @@ void Render::drawTrigMesh(TrigMesh * m)
   glDrawArrays(GL_TRIANGLES, 0, (GLsizei)(3*m->t.size()));
 }
 
-void Render::initTrigBuffers(TrigMesh * m)
-{
-  ShaderBuffer buf;
-  int nBuf = 3;
-  glGenVertexArrays(1, &buf.vao);
-  glBindVertexArray(buf.vao);
-  buf.b.resize(nBuf);
-  glGenBuffers(nBuf, buf.b.data());
-
-  //use index buffer instead maybe.
-  int dim = 3;
-  int nFloat = 3* dim * (int)m->t.size();
-  GLfloat * v = new GLfloat[nFloat];
-  GLfloat * n = new GLfloat[nFloat];
-  GLfloat * color = new GLfloat[nFloat];
-  int cnt= 0;
-  m->compute_norm();
-  for (size_t i = 0; i < m->t.size(); i++) {
-    Vector3s trigv[3];
-    for (int j = 0; j < 3; j++) {
-      trigv[j] = m->v[m->t[i][j]];
-    }
-    Vector3s normal = (trigv[1] - trigv[0]).cross(trigv[2] - trigv[0]);
-    normal.normalize();
-    for (int j = 0; j < 3; j++) {
-      for (int k = 0; k < dim; k++) {
-        v[cnt] = (GLfloat)m->v[m->t[i][j]][k];
-        n[cnt] = (GLfloat)normal[k];
-        color[cnt] = (GLfloat)0.7;
-        //n[cnt] = (GLfloat)m->n[m->t[i][j]][k];
-        cnt++;
-      }
-    }
-  }
-  glBindBuffer(GL_ARRAY_BUFFER, buf.b[0]);
-  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), v, GL_DYNAMIC_DRAW);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-  glBindBuffer(GL_ARRAY_BUFFER, buf.b[1]);
-  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), n, GL_DYNAMIC_DRAW);
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-  glBindBuffer(GL_ARRAY_BUFFER, buf.b[2]);
-  glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), color, GL_DYNAMIC_DRAW);
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-  buffers.push_back(buf);
-
-  delete[]v;
-  delete[]n;
-  delete[]color;
-}
-
 int addCube(const std::vector<Eigen::Vector3d> & verts,
   const Eigen::Vector3f & color, 
   GLfloat * v, GLfloat * n, GLfloat * c)
@@ -228,6 +172,49 @@ int addHexEle(ElementMesh * e, int ei,
   return cnt;
 }
 
+void Render::updateEleSlice(int idx)
+{
+	if ((int)meshes.size() <= idx) {
+		return;
+	}
+	std::cout << "updat em slice " << idx << "\n";
+	ShaderBuffer buf = buffers[idx];
+	ElementMesh * e = meshes[idx];
+	int slice = emEvent[idx].slice;
+	grid.lb[2] = slice;
+	std::cout << "em #ele " << e->e.size() << "\n";
+	std::cout << "slice " << slice << "\n";
+	int gridres = grid.gridSize[2];
+	double dx = 1.0 / gridres;
+
+	int dim = 3;
+	int nTrig = 12;
+	int nFloat = nTrig * 3 * dim * (int)e->e.size();
+	int nV = 3 * nTrig*e->e.size();
+	GLfloat * vscale = new GLfloat[nV];
+	int cnt = 0;
+	for (size_t i = 0; i < e->e.size(); i++) {
+	  Eigen::Vector3d center = eleCenter(e, i);
+	  float scale = 0.0f;
+	  if (center[2] >= slice* dx) {
+		  scale = 1.0f;
+	  }
+	  for (int j = 0; j < nTrig; j++) {
+		  for (int k = 0; k < 3; k++) {
+			  vscale[cnt] = scale;
+			  cnt++;
+		  }
+	  }
+	}
+
+	glBindVertexArray(buf.vao);
+	glBindBuffer(GL_ARRAY_BUFFER, buf.b[3]);
+	glBufferData(GL_ARRAY_BUFFER, nV * sizeof(GLfloat), vscale, GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 0, 0);
+	delete[] vscale;
+}
+
 void Render::copyEleBuffers(int idx)
 {
   if ((int)meshes.size() <= idx) {
@@ -242,27 +229,32 @@ void Render::copyEleBuffers(int idx)
   int gridres = grid.gridSize[2];
   double dx = 1.0 / gridres;
 
-  std::vector<int> eidx;
-  for (size_t i = 0; i < e->e.size(); i++) {
-    Eigen::Vector3d center = eleCenter(e, i);
-    if (center[2] >= slice* dx) {
-      eidx.push_back(i);
-    }
-  }
-  if (eidx.size() == 0) {
-    return;
-  }
+  //std::vector<int> eidx;
+  //for (size_t i = 0; i < e->e.size(); i++) {
+  //  Eigen::Vector3d center = eleCenter(e, i);
+  //  if (center[2] >= slice* dx) {
+  //    eidx.push_back(i);
+  //  }
+  //}
+  //if (eidx.size() == 0) {
+  //  return;
+  //}
   //use index buffer instead maybe.
   int dim = 3;
   int nTrig = 12;
-  int nFloat = nTrig * 3 * dim * (int)eidx.size();
+  int nFloat = nTrig * 3 * dim * (int)e->e.size();
+  int nV = 3 * nTrig*e->e.size();
   GLfloat * v = new GLfloat[nFloat];
   GLfloat * n = new GLfloat[nFloat];
   GLfloat * color = new GLfloat[nFloat];
+  GLfloat * vscale = new GLfloat[nV];
+  for (int i = 0; i < nV; i++) {
+	  vscale[i] = 1.0f;
+  }
   int cnt = 0;
 
-  for (size_t i = 0; i < (int)eidx.size(); i++) {
-    int ret = addHexEle(e, eidx[i], v + cnt, n + cnt, color + cnt);
+  for (size_t i = 0; i < (int)e->e.size(); i++) {
+    int ret = addHexEle(e, i, v + cnt, n + cnt, color + cnt);
     cnt += ret;
   }
   glBindVertexArray(buf.vao);
@@ -280,23 +272,16 @@ void Render::copyEleBuffers(int idx)
   glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), color, GL_DYNAMIC_DRAW);
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    
+
+  glBindBuffer(GL_ARRAY_BUFFER, buf.b[3]);
+  glBufferData(GL_ARRAY_BUFFER, nV * sizeof(GLfloat), vscale, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(3);
+  glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 0, 0);
+
   delete[]v;
   delete[]n;
   delete[]color;
-}
-
-void Render::initEleBuffers(int idx)
-{
-  ElementMesh* e = meshes[idx];
-  ShaderBuffer buf;
-  int nBuf = 3;
-  glGenVertexArrays(1, &buf.vao);
-  glBindVertexArray(buf.vao);
-  buf.b.resize(nBuf);
-  glGenBuffers(nBuf, buf.b.data());
-  buffers.push_back(buf);
-  copyEleBuffers(idx);
+  delete[] vscale;
 }
 
 int addLine(Eigen::Vector3d x0, Eigen::Vector3d x1,
@@ -374,19 +359,21 @@ int addCuboid(Cuboid & cuboid,
 
 void copyRayBuffers(ShaderBuffer & buf, PickEvent & event, ElementMesh * em)
 {
-  
-  Eigen::Vector3f color;
-  color << 0.8, 0.7, 0.7;
-  int nTrig = 12;
-  int dim = 3;
-  event.nLines = event.edges.size();
-  if (event.nLines <= 0) {
-    return;
-  }
-  int nFloat = nTrig * event.nLines * 3 * dim;
-  GLfloat * v = new GLfloat[nFloat];
-  GLfloat * n = new GLfloat[nFloat];
-  GLfloat * c = new GLfloat[nFloat];
+
+	Eigen::Vector3f color;
+	color << 0.8, 0.7, 0.7;
+	int nTrig = 12;
+	int dim = 3;
+	event.nLines = event.edges.size();
+	if (event.nLines <= 0) {
+		return;
+	}
+	int nFloat = nTrig * event.nLines * 3 * dim;
+	int nV = nTrig*event.nLines * 3;
+	GLfloat * v = new GLfloat[nFloat];
+	GLfloat * n = new GLfloat[nFloat];
+	GLfloat * c = new GLfloat[nFloat];
+	GLfloat * vscale = new GLfloat[nV];
   float len = 2;
   Eigen::Vector3d x0 = event.r.o.cast<double>();
   Eigen::Vector3d x1 = x0 + len * event.r.d.cast<double>();
@@ -416,9 +403,15 @@ void copyRayBuffers(ShaderBuffer & buf, PickEvent & event, ElementMesh * em)
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+  glBindBuffer(GL_ARRAY_BUFFER, buf.b[3]);
+  glBufferData(GL_ARRAY_BUFFER, nV * sizeof(GLfloat), c, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(3);
+  glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 0, 0);
+
   delete[]v;
   delete[]n;
   delete[]c;
+  delete[] vscale;
 }
 
 void Render::copyGraphBuffers()
@@ -431,13 +424,17 @@ void Render::copyGraphBuffers()
   if (cuboids.size() == 0) {
     return;
   }
-  int nFloat = nTrig * g.E.size() * 3 * dim;
+  int nFloat = nTrig * cuboids.size() * 3 * dim;
+  int nV = nTrig * 3 * cuboids.size();
   GLfloat * v = new GLfloat[nFloat];
   GLfloat * n = new GLfloat[nFloat];
   GLfloat * c = new GLfloat[nFloat];
+  GLfloat * vscale = new GLfloat[nV];
   float len = 2;
   int cnt = 0;
-
+  for (int i = 0; i < nV; i++) {
+	  vscale[i] = 1.0f;
+  }
   for (size_t i = 0; i < cuboids.size(); i++) {
     float a = (i / (float)(cuboids.size()-1));
     Eigen::Vector3f color =  a * basecolor[1] + (1-a) * basecolor[0];
@@ -460,14 +457,33 @@ void Render::copyGraphBuffers()
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+  glBindBuffer(GL_ARRAY_BUFFER, gbuf.b[3]);
+  glBufferData(GL_ARRAY_BUFFER, nV * sizeof(GLfloat), vscale, GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(3);
+  glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 0, 0);
+
   delete[]v;
   delete[]n;
   delete[]c;
+  delete[]vscale;
+}
+
+void Render::initEleBuffers(int idx)
+{
+	ElementMesh* e = meshes[idx];
+	ShaderBuffer buf;
+	int nBuf = 4;
+	glGenVertexArrays(1, &buf.vao);
+	glBindVertexArray(buf.vao);
+	buf.b.resize(nBuf);
+	glGenBuffers(nBuf, buf.b.data());
+	buffers.push_back(buf);
+	copyEleBuffers(idx);
 }
 
 void Render::initGraphBuffers()
 {
-  int nBuf = 3;
+  int nBuf = 4;
   glGenVertexArrays(1, &gbuf.vao);
   glBindVertexArray(gbuf.vao);
   gbuf.b.resize(nBuf, 0);
@@ -477,7 +493,7 @@ void Render::initGraphBuffers()
 
 void Render::initRayBuffers()
 {
-  int nBuf = 3;
+  int nBuf = 4;
   glGenVertexArrays(1, &pickEvent.buf.vao);
   glBindVertexArray(pickEvent.buf.vao);
   pickEvent.buf.b.resize(nBuf);
@@ -487,6 +503,71 @@ void Render::initRayBuffers()
   if (meshes.size() > 0) {
     copyRayBuffers(pickEvent.buf, pickEvent, meshes[0]);
   }
+}
+
+void Render::initTrigBuffers(TrigMesh * m)
+{
+	ShaderBuffer buf;
+	int nBuf = 4;
+	glGenVertexArrays(1, &buf.vao);
+	glBindVertexArray(buf.vao);
+	buf.b.resize(nBuf);
+	glGenBuffers(nBuf, buf.b.data());
+
+	//use index buffer instead maybe.
+	int dim = 3;
+	int nFloat = 3 * dim * (int)m->t.size();
+	int nV = 3 * m->t.size();
+	GLfloat * v = new GLfloat[nFloat];
+	GLfloat * n = new GLfloat[nFloat];
+	GLfloat * color = new GLfloat[nFloat];
+	GLfloat * vscale = new GLfloat[nV];
+	int cnt = 0;
+	m->compute_norm();
+	for (size_t i = 0; i < m->t.size(); i++) {
+		Vector3s trigv[3];
+		for (int j = 0; j < 3; j++) {
+			trigv[j] = m->v[m->t[i][j]];
+		}
+		Vector3s normal = (trigv[1] - trigv[0]).cross(trigv[2] - trigv[0]);
+		normal.normalize();
+		for (int j = 0; j < 3; j++) {
+			vscale[3 * i + j] = 1.0f;
+			for (int k = 0; k < dim; k++) {
+				v[cnt] = (GLfloat)m->v[m->t[i][j]][k];
+				n[cnt] = (GLfloat)normal[k];
+				color[cnt] = (GLfloat)0.7;
+				//n[cnt] = (GLfloat)m->n[m->t[i][j]][k];
+				cnt++;
+			}
+		}
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, buf.b[0]);
+	glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), v, GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, buf.b[1]);
+	glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), n, GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, buf.b[2]);
+	glBufferData(GL_ARRAY_BUFFER, nFloat * sizeof(GLfloat), color, GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, buf.b[3]);
+	glBufferData(GL_ARRAY_BUFFER, nV * sizeof(GLfloat), vscale, GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 0, 0);
+
+	buffers.push_back(buf);
+
+	delete[]v;
+	delete[]n;
+	delete[]color;
+	delete[] vscale;
 }
 
 void checkShaderError(GLuint shader)
