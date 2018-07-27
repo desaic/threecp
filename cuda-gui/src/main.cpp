@@ -11,10 +11,10 @@
 
 #include "linmath.h"
 #include "gui.hpp"
-#include "ParametricStructure3D.hpp"
+
 #include "TrigMesh.hpp"
 #include "VoxelIO.hpp"
-#include "volume_renderer.h"
+
 void loadCuboids(std::string filename, std::vector<Cuboid> & cuboids);
 
 void readVoxGraph(std::string filename, std::vector<int> & verts,
