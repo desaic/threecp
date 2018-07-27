@@ -11,7 +11,7 @@ int rayGridIntersect(const Ray & r0, const RegGrid & grid)
   Eigen::Vector3f bounds[2];
   bounds[0] = Eigen::Vector3f(0, 0, 0);
   for (int i = 0; i < 3; i++) {
-    bounds[1][i] = grid.dx[i] * grid.gridSize[i];
+    bounds[1][i] = (float)(grid.dx[i] * grid.gridSize[i]);
   }
   bool boxInter = rayBoxIntersect(r, bounds, tmin, tmax);
   if (!boxInter) {
@@ -34,12 +34,12 @@ int rayGridIntersect(const Ray & r0, const RegGrid & grid)
   int Y = point[1];
   int Z = point[2];
   grid.clamp(X, Y, Z);
-  float tMaxX = ((point[0] + (stepX + 1) / 2) * grid.dx[0] - v1[0]) / r.d[0];
-  float tMaxY = ((point[1] + (stepY + 1) / 2) * grid.dx[1] - v1[1]) / r.d[1];
-  float tMaxZ = ((point[2] + (stepZ + 1) / 2) * grid.dx[2] - v1[2]) / r.d[2];
-  float tDeltaX = std::abs(grid.dx[0] / r.d[0]);
-  float tDeltaY = std::abs(grid.dx[1] / r.d[1]);
-  float tDeltaZ = std::abs(grid.dx[2] / r.d[2]);
+  float tMaxX = (float)((point[0] + (stepX + 1) / 2) * grid.dx[0] - v1[0]) / r.d[0];
+  float tMaxY = (float)((point[1] + (stepY + 1) / 2) * grid.dx[1] - v1[1]) / r.d[1];
+  float tMaxZ = (float)((point[2] + (stepZ + 1) / 2) * grid.dx[2] - v1[2]) / r.d[2];
+  float tDeltaX = (float)std::abs(grid.dx[0] / r.d[0]);
+  float tDeltaY = (float)std::abs(grid.dx[1] / r.d[1]);
+  float tDeltaZ = (float)std::abs(grid.dx[2] / r.d[2]);
   int val = grid(X, Y, Z);
   if (val >= 0) {
     return val;
@@ -83,7 +83,7 @@ bool rayBoxIntersect(const Ray & r, const Eigen::Vector3f * bounds,
   float & tmin, float & tmax)
 {
   int sign[3];
-  Eigen::Vector3f invdir(1.0 / r.d[0], 1.0 / r.d[1], 1.0 / r.d[2]);
+  Eigen::Vector3f invdir(1.0f / r.d[0], 1.0f / r.d[1], 1.0f / r.d[2]);
   sign[0] = (invdir[0] < 0);
   sign[1] = (invdir[1] < 0);
   sign[2] = (invdir[2] < 0);

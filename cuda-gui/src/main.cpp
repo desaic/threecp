@@ -8,7 +8,7 @@
 #include "Element.hpp"
 #include "ElementRegGrid.hpp"
 #include "ElementMeshUtil.hpp"
-#include "GraphUtil.hpp"
+
 #include "linmath.h"
 #include "gui.hpp"
 #include "ParametricStructure3D.hpp"
@@ -64,13 +64,13 @@ void applyModifiers(const ConfigFile & conf, std::vector<double> & s,
   Cuboid cuboid;
   cuboid.x0[0] = 1;
   cuboid.x0[1] = 1;
-  cuboid.x0[2] = 0.6;
-  cuboid.x1[0] = 0.7;
-  cuboid.x1[1] = 0.7;
-  cuboid.x1[2] = 0.0;
-  cuboid.r[0] = 0.2;
-  cuboid.r[1] = 0.02;
-  cuboid.theta = -0.78;
+  cuboid.x0[2] = 0.6f;
+  cuboid.x1[0] = 0.7f;
+  cuboid.x1[1] = 0.7f;
+  cuboid.x1[2] = 0.0f;
+  cuboid.r[0] = 0.2f;
+  cuboid.r[1] = 0.02f;
+  cuboid.theta = -0.78f;
   //drawCuboid(cuboid, s, gridSize, 1);
 
   if (mirror) {
@@ -126,9 +126,7 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
     assignGridMat(sk, gridSize, grid);
     hexToTrigMesh(grid, &tm);
     tm.save_obj("skel.obj");
-
   }
-  Graph G;
   std::vector<std::string> voxFiles = conf.getStringVector("voxfiles");
   std::cout << "vox file " << voxFiles.size() << "\n";
   std::vector<int> gridSize;
@@ -153,15 +151,6 @@ void readRenderConfig(const ConfigFile & conf, Render * render)
       printIntStructure(s.data(), gridSize, out.out);
       out.close();
       saveBinaryStructure("tet.bin", s, gridSize);
-    }
-
-    if (toGraph && (i == 0)) {
-      float eps = 0.09f;
-      voxToGraph(s, gridSize, G);
-      //contractVertDegree2(G, eps);
-      mergeCloseVerts(G, eps);
-      contractPath(G, 0.12);
-      saveGraph("skelGraph.txt", G);
     }
     
     std::cout << "Grid size " << gridSize[0] << " " << gridSize[1] << " " << gridSize[2] << ".\n";
@@ -310,7 +299,7 @@ int main(int argc, char * argv[])
     t1 = glfwGetTime();
     double dt = t1 - t0;
     t0 = t1;
-    gui->render->moveCamera(dt);
+    gui->render->moveCamera((float)dt);
 
     glfwPollEvents();
   }
@@ -334,7 +323,7 @@ void loadCuboids(std::string filename, std::vector<Cuboid> & cuboids)
   if (params.size() == 0) {
     return;
   }
-  int pidx = params.size() - 1;
+  int pidx = (int)params.size() - 1;
   int nParam = (int)params[pidx].size();
   int dim = 3;
   int paramPerCube = 9;
@@ -343,24 +332,24 @@ void loadCuboids(std::string filename, std::vector<Cuboid> & cuboids)
   //read positions
   for (size_t i = 0; i < cuboids.size(); i++) {
     for (int j = 0; j < dim; j++) {
-      int idx = 6 * i + j + 3;
+      int idx = 6 * (int)i + j + 3;
       if (idx >= (int)params[pidx].size()) {
         break;
       }
       //scale graph to 2x.
       //graph param is scaled back to [0 0.5] in input.
-      cuboids[i].x0[j] =  params[pidx][6 * i + j];
-      cuboids[i].x1[j] =  params[pidx][6 * i + j + 3];
+      cuboids[i].x0[j] = (float)params[pidx][6 * i + j];
+      cuboids[i].x1[j] = (float)params[pidx][6 * i + j + 3];
     }
   }
   //read sizes
   for (size_t i = 0; i < cuboids.size(); i++) {
-    int idx = 6 * cuboids.size() + 3 * i + 2;
+    int idx = 6 * (int)cuboids.size() + 3 * (int)i + 2;
     if (idx >= (int)params[pidx].size()) {
       break;
     }
-    cuboids[i].r[0] = params[pidx][6 * cuboids.size() + 3 * i];
-    cuboids[i].r[1] = params[pidx][6 * cuboids.size() + 3 * i + 1];
-    cuboids[i].theta = params[pidx][6 * cuboids.size() + 3 * i + 2];
+    cuboids[i].r[0] = (float)params[pidx][6 * cuboids.size() + 3 * i];
+    cuboids[i].r[1] = (float)params[pidx][6 * cuboids.size() + 3 * i + 1];
+    cuboids[i].theta = (float)params[pidx][6 * cuboids.size() + 3 * i + 2];
   }
 }

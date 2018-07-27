@@ -15,7 +15,7 @@
 #include <stdio.h>
 
 #ifdef _MSC_VER
-#define NANOGUI_SNPRINTF _snprintf
+#define NANOGUI_SNPRINTF _snprintf_s
 #else
 /// Platform dependent snprintf (``_snprintf`` for MSVC, ``snprintf`` otherwise).
 #define NANOGUI_SNPRINTF snprintf

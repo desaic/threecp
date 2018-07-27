@@ -16,7 +16,7 @@ void Render::updateGrid(const std::vector<double> & s, const std::vector<int> & 
 {
   grid.allocate(gridSize[0], gridSize[1], gridSize[2]);
   int cnt = 0;
-  float thresh = 0.5;
+  float thresh = 0.5f;
   for (int j = 0; j < s.size(); j++) {
     if (s[j] < thresh) {
       grid.s[j] = -1;
@@ -88,7 +88,7 @@ void Render::drawContent()
   glUniformMatrix4fv(mvit_loc, 1, GL_FALSE, (const GLfloat*)mvit.data());
   
   for (size_t i = 0; i < meshes.size(); i++) {
-    elementMeshEvent(i);
+    elementMeshEvent((int)i);
     glBindVertexArray(buffers[i].vao);
     drawElementMesh(meshes[i]);
     //std::cout << "#ele " << meshes[i]->e.size() << "\n";
@@ -154,10 +154,10 @@ int addHexEle(ElementMesh * e, int ei,
   int dim = 3;
   Eigen::Vector3f color = e->color[ei];
   if (e->eLabel[ei] == 1) {
-    color = Eigen::Vector3f(0.5, 0.9, 0.5);
+    color = Eigen::Vector3f(0.5f, 0.9f, 0.5f);
   }
   else if (e->eLabel[ei] == 2) {
-    color = Eigen::Vector3f(0.9, 0.5, 0.5);
+    color = Eigen::Vector3f(0.9f, 0.5f, 0.5f);
   }
   Eigen::Vector3d center = eleCenter(e, ei);
   std::vector<Eigen::Vector3d> verts(e->e[ei]->nV());
@@ -186,11 +186,11 @@ void Render::updateEleSlice(int idx)
 	int dim = 3;
 	int nTrig = 12;
 	int nFloat = nTrig * 3 * dim * (int)e->e.size();
-	int nV = 3 * nTrig*e->e.size();
+	int nV = 3 * nTrig * (int)e->e.size();
 	GLfloat * vscale = new GLfloat[nV];
 	int cnt = 0;
 	for (size_t i = 0; i < e->e.size(); i++) {
-	  Eigen::Vector3d center = eleCenter(e, i);
+	  Eigen::Vector3d center = eleCenter(e, (int)i);
 	  float scale = 0.0f;
 	  if (center[2] >= slice* dx) {
 		  scale = 1.0f;
@@ -239,7 +239,7 @@ void Render::copyEleBuffers(int idx)
   int dim = 3;
   int nTrig = 12;
   int nFloat = nTrig * 3 * dim * (int)e->e.size();
-  int nV = 3 * nTrig*e->e.size();
+  int nV = 3 * nTrig * (int)e->e.size();
   GLfloat * v = new GLfloat[nFloat];
   GLfloat * n = new GLfloat[nFloat];
   GLfloat * color = new GLfloat[nFloat];
@@ -249,8 +249,8 @@ void Render::copyEleBuffers(int idx)
   }
   int cnt = 0;
 
-  for (size_t i = 0; i < (int)e->e.size(); i++) {
-    int ret = addHexEle(e, i, v + cnt, n + cnt, color + cnt);
+  for (size_t i = 0; i < e->e.size(); i++) {
+    int ret = addHexEle(e, (int)i, v + cnt, n + cnt, color + cnt);
     cnt += ret;
   }
   glBindVertexArray(buf.vao);
@@ -287,7 +287,7 @@ int addLine(Eigen::Vector3d x0, Eigen::Vector3d x1,
   std::vector < Eigen::Vector3d> verts(8);
   Eigen::Vector3d x(1, 0, 0);
   Eigen::Vector3d d = x1 - x0;
-  float dz = d.norm();
+  float dz = (float)d.norm();
   Eigen::Vector3d z = (1.0 / dz)*d;
   if (std::abs(z[0]) > 0.9) {
     x << 0, 0, 1;
@@ -298,7 +298,7 @@ int addLine(Eigen::Vector3d x0, Eigen::Vector3d x1,
   x = y.cross(z);
   x.normalize();
   
-  float dx = 0.01;
+  float dx = 0.01f;
   verts[0] = o - dx * x - dx * y;
   verts[1] = o - dx * x - dx * y + dz * z;
   verts[2] = o - dx * x + dx * y;
@@ -320,11 +320,11 @@ int addCuboid(Cuboid & cuboid,
   Eigen::Vector3d x0(cuboid.x0[0], cuboid.x0[1], cuboid.x0[2]);
   Eigen::Vector3d x1(cuboid.x1[0], cuboid.x1[1], cuboid.x1[2]);
   Eigen::Vector3d x = x1 - x0;
-  float len = x.norm();
-  if (len < 1e-10) {
+  float len = (float)x.norm();
+  if (len < 1e-10f) {
     //draw something random if d is nearly 0.
     x = Eigen::Vector3d(1e-5, 1e-5, 1e-5);
-    len = x.norm();
+    len = (float)x.norm();
   }
   x = x / len;
   Eigen::Vector3d y(0, 1, 0);
@@ -357,10 +357,10 @@ void copyRayBuffers(ShaderBuffer & buf, PickEvent & event, ElementMesh * em)
 {
 
 	Eigen::Vector3f color;
-	color << 0.8, 0.7, 0.7;
+	color << 0.8f, 0.7f, 0.7f;
 	int nTrig = 12;
 	int dim = 3;
-	event.nLines = event.edges.size();
+	event.nLines = (int)event.edges.size();
 	if (event.nLines <= 0) {
 		return;
 	}
@@ -449,7 +449,7 @@ void Render::initTrigBuffers(TrigMesh * m)
 	//use index buffer instead maybe.
 	int dim = 3;
 	int nFloat = 3 * dim * (int)m->t.size();
-	int nV = 3 * m->t.size();
+	int nV = 3 * (int)m->t.size();
 	GLfloat * v = new GLfloat[nFloat];
 	GLfloat * n = new GLfloat[nFloat];
 	GLfloat * color = new GLfloat[nFloat];
@@ -551,7 +551,7 @@ void Render::init()
   
   emEvent.resize(meshes.size());
   for (size_t i = 0; i < meshes.size(); i++) {
-    initEleBuffers(i);
+    initEleBuffers((int)i);
   }
   for (size_t i = 0; i < trigs.size(); i++) {
     initTrigBuffers(trigs[i]);
@@ -614,7 +614,7 @@ void Render::pick(double xpos, double ypos)
   }
   pickEvent.picked = true;
   Eigen::Vector4f d;
-  d << 2 * xpos / width -1, 1 - 2 * ypos / height, 1 , 1;
+  d << 2 * (float)xpos / width -1, 1 - 2 * (float)ypos / height, 1 , 1;
   d = cam.p.inverse()*d;
   pickEvent.r.o = cam.eye;
   d[3] = 0;
@@ -668,10 +668,10 @@ void PickEvent::saveGraph(ElementMesh * em, RegGrid * grid) {
     int e1 = k.first;
     int e2 = k.second;
     if (verts.find(e1) == verts.end()) {
-      verts[e1] = verts.size();
+      verts[e1] = (int)verts.size();
     }
     if(verts.find(e2) == verts.end()){
-      verts[e2] = verts.size();
+      verts[e2] = (int)verts.size();
     }
   }
   for (std::map<int, int>::const_iterator it = verts.begin(); it != verts.end(); it++) {
