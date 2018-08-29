@@ -130,7 +130,7 @@ void MainWindow::loadVolStr(const std::string & filename) {
 
 void MainWindow::loadVol() {
     QString fileName = QFileDialog::getOpenFileName(this, ("Open File"),
-        "/home", ("Binary volume (*.bin)"));
+        "/home", ("Binary volume (*.bin *.vol)"));
     if (!fileName.isNull()) {
         qDebug() << "selected file path : " << fileName.toUtf8();
     }
