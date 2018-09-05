@@ -8,6 +8,7 @@
 #include <array>
 #include <thread>
 #include "ConfigFile.hpp"
+#include "Image.h"
 #include "Volume.hpp"
 class ImagingThread;
 class OCTGLWidget;
@@ -26,7 +27,8 @@ public:
   bool loadConfigFile(const std::string & filename);
   void selectRawImage(int idx);
   //load volume file specified by std::string filename
-  void loadVolStr(const std::string & filename);
+  bool loadVolStr(const std::string & filename);
+  bool loadFloatImg(const std::string & filename);
   ~MainWindow();
 
   enum ViewMode{VIEW_SCAN, VIEW_GRAD};
@@ -49,7 +51,6 @@ private slots:
 
 private:
   Ui::MainWindow *ui;
-  QImage image;
   std::string configFilename;
   ConfigFile conf;
 
@@ -62,6 +63,8 @@ private:
   int captureMode;
   int saveCropZ;
   Volume vol;
+  ImageF32 image;
+
 };
 
 class ImagingThread :public QThread {

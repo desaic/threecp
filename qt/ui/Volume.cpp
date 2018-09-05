@@ -15,11 +15,24 @@ bool Volume::allocate(size_t sx, size_t sy, size_t sz)
     if (sx > MAX_VOL_DIMENSION || sy > MAX_VOL_DIMENSION || sz > MAX_VOL_DIMENSION) {
         return false;
     }
-    if (sx*sy*sz > MAX_NUM_VOX) {
+    size_t nVox = sx * sy*sz;
+    if (nVox > MAX_NUM_VOX || nVox == 0) {
         return false;
     }
-    data.resize(sx*sy*sz);
+    data.resize(nVox);
     size[0] = sx;
     size[1] = sy;
     size[2] = sz;
+    return true;
+}
+
+bool checkSize(size_t sx, size_t sy, size_t sz) {
+    if (sx > MAX_VOL_DIMENSION || sy > MAX_VOL_DIMENSION || sz > MAX_VOL_DIMENSION) {
+        return false;
+    }
+    size_t nVox = sx * sy*sz;
+    if (nVox > MAX_NUM_VOX || nVox == 0) {
+        return false;
+    }
+    return true;
 }

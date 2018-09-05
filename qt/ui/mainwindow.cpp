@@ -5,6 +5,7 @@
 #include "Array3D.h"
 #include "ConfigFile.hpp"
 #include "FileUtil.hpp"
+#include "Image.h"
 #include "octglwidget.h"
 #include <QDebug>
 #include <QDir>
@@ -28,7 +29,8 @@ namespace fs = std::experimental::filesystem;
 void saveVolume(std::string outdir, int scanCount, const std::vector<uint8_t> & vol, const int * volSize,
     int zCrop0, int zCrop1);
 
-void loadVolume(std::string filename, std::vector<uint8_t> & vol, int * volSize);
+//@return false if volume size in file is out of bound.
+bool loadVolume(std::string filename, std::vector<uint8_t> & vol, int * volSize);
 
 double transformA, transformB, rotateAngle;
 
@@ -104,7 +106,7 @@ void MainWindow::loadImages()
 void MainWindow::loadBin() {
 }
 
-void MainWindow::loadVolStr(const std::string & filename) {
+bool MainWindow::loadVolStr(const std::string & filename) {
     FileUtilIn in;
     int volSize[3];
     in.open(filename, std::ifstream::binary);
@@ -116,7 +118,7 @@ void MainWindow::loadVolStr(const std::string & filename) {
     if (!status) {
         std::cout << "Error: wrong file or volume is too large to be read.\n";
         std::cout << "Volume size "<<volSize[0]<<" "<<volSize[1]<<" "<<volSize[2]<<"\n";
-        return;
+        return false;
     }
 
     in.in.read((char*)vol.data.data(), nVox);
@@ -126,6 +128,7 @@ void MainWindow::loadVolStr(const std::string & filename) {
     ui->imageIndexSlider->setMinimum(0);
     ui->imageIndexSlider->setMaximum((int)volSize[1] - 1);
     selectImage(0);
+    return true;
 }
 
 void MainWindow::loadVol() {
@@ -146,7 +149,6 @@ void MainWindow::selectImage(int index)
 {
     index = std::max(0, index);
     index = std::min((int)vol.size[1] - 1, index);
-        
     QImage qimage(vol.size[0], vol.size[2], QImage::Format_ARGB32);
     uchar* bits = qimage.bits();
     for (int row = 0; row < qimage.height(); row++) {
@@ -191,16 +193,20 @@ void MainWindow::closeEvent(QCloseEvent * )
 	imagingThread->wait();
 }
 
-void loadVolume(std::string filename, std::vector<uint8_t> & vol, int * volSize) {
+bool loadVolume(std::string filename, std::vector<uint8_t> & vol, int * volSize) {
     FileUtilIn in;
     in.open(filename, std::ifstream::binary);
     in.in.read((char*)(&volSize[0]), sizeof(int));
     in.in.read((char*)(&volSize[1]), sizeof(int));
     in.in.read((char*)(&volSize[2]), sizeof(int));
+    if (!checkSize(volSize[0], volSize[1], volSize[2])) {
+        return false;
+    }
     size_t nVox = volSize[0] * volSize[1] * (size_t)volSize[2];
     vol.resize(nVox);
     in.in.read((char*)vol.data(), nVox);
     in.close();
+    return true;
 }
 
 void saveVolume(std::string outdir, int scanCount, const std::vector<uint8_t> & vol, const int * volSize,
@@ -267,6 +273,26 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e)
     }
 }
 
+bool MainWindow::loadFloatImg(const std::string & filename)
+{
+    loadFloatImage(filename, image.data, image.size[0], image.size[1]);
+    QImage qimage(image.size[0], image.size[1], QImage::Format_ARGB32);
+    uchar* bits = qimage.bits();
+    for (int row = 0; row < qimage.height(); row++) {
+        for (int col = 0; col < qimage.width(); col++) {
+            unsigned char val = (unsigned char )image(col,row)/4;
+            bits[qimage.bytesPerLine() * row + 4 * col] = val;
+            bits[qimage.bytesPerLine() * row + 4 * col + 1] = val;
+            bits[qimage.bytesPerLine() * row + 4 * col + 2] = val;
+            bits[qimage.bytesPerLine() * row + 4 * col + 3] = 255;
+        }
+    }
+    QPixmap pixmap = QPixmap::fromImage(qimage);
+    ui->depthViewer->setFixedSize(pixmap.size());
+    ui->depthViewer->setPixmap(pixmap);
+    return true;
+}
+
 void MainWindow::dropEvent(QDropEvent* event)
 {
     const QMimeData* mimeData = event->mimeData();
@@ -281,7 +307,10 @@ void MainWindow::dropEvent(QDropEvent* event)
         if (urlList.size() > 0) {
             QString filename = (urlList.at(0).toLocalFile());
             std::string f = filename.toStdString();
-            loadVolStr(f);
+            bool success = loadVolStr(f);
+            if (!success) {
+                loadFloatImg(f);
+            }
         }
         event->acceptProposedAction();
     }

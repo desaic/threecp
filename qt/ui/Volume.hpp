@@ -11,3 +11,5 @@ public:
     uint8_t operator()(size_t x, size_t y, size_t z)const ;
     bool allocate(size_t sx, size_t sy, size_t sz);
 };
+
+bool checkSize(size_t sx, size_t sy, size_t sz);
