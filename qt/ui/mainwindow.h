@@ -48,7 +48,8 @@ private slots:
   void selectVolumeSlice(int index);
   void toggleViewMode();
   void startGL();
-
+  void saveSlice();
+  
 private:
   Ui::MainWindow *ui;
   std::string configFilename;
@@ -62,6 +63,7 @@ private:
   int scanCount;
   int captureMode;
   int saveCropZ;
+  int sliceCount;
   Volume vol;
   ImageF32 image;
 

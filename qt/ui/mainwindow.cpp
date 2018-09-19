@@ -42,7 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
   imagingThread(new ImagingThread()),
   scanCount(0), 
   viewMode(VIEW_SCAN),
-  captureMode(0), saveCropZ(0)
+  captureMode(0), saveCropZ(0),
+    sliceCount(0)
 {
   
   ui->setupUi(this);
@@ -58,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(ui->actionLoadBin, &QAction::triggered, this, &MainWindow::loadBin);
   connect(ui->actionLoadVol, &QAction::triggered, this, &MainWindow::loadVol);
   connect(ui->actionStartRender, &QAction::triggered, this, &MainWindow::startGL);
-
+  connect(ui->buttonSaveSlice, &QPushButton::clicked, this, &MainWindow::saveSlice);
   imagingThread->main = this;
   imagingThread->glViewer = ui->glViewer;
   connect(imagingThread, &ImagingThread::selectImage, this, &MainWindow::selectImage);
@@ -125,9 +126,11 @@ bool MainWindow::loadVolStr(const std::string & filename) {
     in.close();
 
     std::cout << "Volume size " << volSize[0] << " " << volSize[1] << " " << volSize[2] << "\n";
+    int index = ui->imageIndexSlider->value();
+    index = clamp(index, 0, volSize[1] - 1);
     ui->imageIndexSlider->setMinimum(0);
     ui->imageIndexSlider->setMaximum((int)volSize[1] - 1);
-    selectImage(0);
+    selectImage(index);
     return true;
 }
 
@@ -162,7 +165,7 @@ void MainWindow::selectImage(int index)
     }
 
     QPixmap pixmap = QPixmap::fromImage(qimage);
-
+    ui->LabelSliceNum->setText(QString::number(index));
     ui->imageViewer->setFixedSize(pixmap.size());
     ui->imageViewer->setPixmap(pixmap);
 }
@@ -207,6 +210,29 @@ bool loadVolume(std::string filename, std::vector<uint8_t> & vol, int * volSize)
     in.in.read((char*)vol.data(), nVox);
     in.close();
     return true;
+}
+
+void MainWindow::saveSlice() {
+    int index = ui->imageIndexSlider->value();
+    index = std::max(0, index);
+    index = std::min((int)vol.size[1] - 1, index);
+    if (vol.size[1] == 0) {
+        return;
+    }
+
+    QImage qimage(vol.size[0], vol.size[2], QImage::Format_ARGB32);
+    uchar* bits = qimage.bits();
+    for (int row = 0; row < qimage.height(); row++) {
+        for (int col = 0; col < qimage.width(); col++) {
+            unsigned char val = vol(col, index, row);
+            bits[qimage.bytesPerLine() * row + 4 * col] = val;
+            bits[qimage.bytesPerLine() * row + 4 * col + 1] = val;
+            bits[qimage.bytesPerLine() * row + 4 * col + 2] = val;
+            bits[qimage.bytesPerLine() * row + 4 * col + 3] = 255;
+        }
+    }
+    qimage.save(QString::number(index) +"_"+QString::number(sliceCount)+ ".png");
+    sliceCount++;
 }
 
 void saveVolume(std::string outdir, int scanCount, const std::vector<uint8_t> & vol, const int * volSize,
