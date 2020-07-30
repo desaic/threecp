@@ -52,6 +52,7 @@ public:
 
 void makeCube(TrigMesh & m, const Vector3s &mn,
     const Vector3s mx);
+void makePlane(TrigMesh & m);
 ///@brief cube [0,1]^3
 extern TrigMesh UNIT_CUBE;
 

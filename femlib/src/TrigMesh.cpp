@@ -30,6 +30,18 @@ void makeCube(TrigMesh & m, const Vector3s & mn,
   }
 }
 
+void makePlane(TrigMesh & m)
+{
+    m.v.resize(4);
+    m.t.resize(2);
+    m.v[0] = Vector3s(-1, -1, 0);
+    m.v[1] = Vector3s( 1, -1, 0);
+    m.v[2] = Vector3s( 1,  1, 0);
+    m.v[3] = Vector3s(-1,  1, 0);
+    m.t[0] = Vector3i(0, 2, 1);
+    m.t[1] = Vector3i(0, 3, 2);
+}
+
 void TrigMesh::append(const TrigMesh & m)
 {
   unsigned int offset = v.size();
