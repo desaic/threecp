@@ -18,7 +18,6 @@
 
 // CUDA utilities
 #include <helper_cuda.h>
-#include <helper_cuda_gl.h>
 
 // Helper functions
 #include <helper_cuda.h>

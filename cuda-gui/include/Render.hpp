@@ -1,9 +1,9 @@
 #pragma once
 #include "FileUtil.hpp"
 #include "Camera.hpp"
-#include <nanogui\nanogui.h>
-#include "ParametricStructure3D.hpp"
 #include "RegGrid.hpp"
+#include "Graph.hpp"
+#include <nanogui\nanogui.h>
 #include <set>
 
 class ElementMesh;
@@ -56,8 +56,8 @@ class Render
 public:
   Render() :window(0),captureMouse(0),
     camSpeed(1),
-    xRotSpeed(4e-3),
-  yRotSpeed(4e-3){}
+    xRotSpeed(4e-3f),
+  yRotSpeed(4e-3f){}
 
   enum EMEventType {
     NO_EVENT=0,

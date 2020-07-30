@@ -6,7 +6,24 @@
 #include <map>
 
 typedef std::map<std::pair<int, int>, int> EdgeMap;
-
+struct Cuboid
+{
+    float x0[3];
+    float x1[3];
+    float r[2];
+    float theta;
+    bool withCaps;
+    Cuboid() {
+        for (int i = 0; i < 3; i++) {
+            x0[i] = 0;
+            x1[i] = 0;
+        }
+        r[0] = 0;
+        r[1] = 0;
+        theta = 0;
+        withCaps = 1;
+    }
+};
 struct Graph{
   std::vector<int> VLabel;
   std::vector<Eigen::Vector3f> V;

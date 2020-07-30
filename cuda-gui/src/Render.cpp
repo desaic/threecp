@@ -7,7 +7,7 @@
 #include "ElementMesh.hpp"
 #include "ElementMeshUtil.hpp"
 #include "ElementRegGrid.hpp"
-#include "ParametricStructure3D.hpp"
+#include "Graph.hpp"
 #include "TrigMesh.hpp"
 #include "linmath.h"
 #include "VoxelIO.hpp"
