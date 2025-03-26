@@ -4,133 +4,44 @@
 #include <iostream>
 #include <sstream>
 
-#include "CadApp.hpp"
-#include "CanvasApp.h"
-#include "InflateApp.h"
-#include "PackApp.hpp"
 #include "UIConf.h"
 #include "UILib.h"
-#include "VoxApp.h"
-#include "HeadApp.hpp"
-
-void VoxApp() {
-  UILib ui;
-  ConnectorVox app;
-  app.Init(&ui);
-  ui.SetFontsDir("./fonts");
-
-  int statusLabel = ui.AddLabel("status");
-
-  ui.Run();
-
-  const unsigned PollFreqMs = 20;
-
-  while (ui.IsRunning()) {
-    app.Refresh();
-    std::this_thread::sleep_for(std::chrono::milliseconds(PollFreqMs));
-  }
-}
-
-void RunInflateApp() {
-  UILib ui;
-  InflateApp app;
-  app.Init(&ui);
-  ui.SetFontsDir("./fonts");
-  int statusLabel = ui.AddLabel("status");
-  ui.Run();
-  const unsigned PollFreqMs = 20;
-  while (ui.IsRunning()) {
-    app.Refresh();
-    std::this_thread::sleep_for(std::chrono::milliseconds(PollFreqMs));
-  }
-}
-
-void RunCadApp() {
-  UILib ui;
-  CadApp app;
-  app.Init(&ui);
-  ui.SetFontsDir("./fonts");
-  int statusLabel = ui.AddLabel("status");
-  ui.Run();
-
-  const unsigned PollFreqMs = 20;
-
-  while (ui.IsRunning()) {
-    app.Refresh();
-    std::this_thread::sleep_for(std::chrono::milliseconds(PollFreqMs));
-  }
-}
-
-void RunCanvasApp() {
-  UILib ui;
-  CanvasApp app;
-  app.conf._confFile = "./canvas_conf.json";
-  app.Init(&ui);
-  ui.SetFontsDir("./fonts");
-
-  int statusLabel = ui.AddLabel("status");
-
-  ui.Run();
-
-  const unsigned PollFreqMs = 20;
-
-  while (ui.IsRunning()) {
-    app.RefreshUI();
-    std::this_thread::sleep_for(std::chrono::milliseconds(PollFreqMs));
-  }
-}
-
-void RunPackApp() {
-  UILib ui;
-  PackApp app;
-  app.Init(&ui);
-  ui.SetFontsDir("./fonts");
-  int statusLabel = ui.AddLabel("status");
-  ui.Run();
-
-  const unsigned PollFreqMs = 20;
-
-  while (ui.IsRunning()) {
-    app.Refresh();
-    std::this_thread::sleep_for(std::chrono::milliseconds(PollFreqMs));
-  }
-}
-
-extern void MapDrawingToThickness();
-
-void RunHeadApp() {
-  UILib ui;
-  HeadApp app;
-  app.Init(&ui);
-  ui.SetFontsDir("./fonts");
-
-  int statusLabel = ui.AddLabel("status");
-
-  ui.Run();
-
-  const unsigned PollFreqMs = 20;
-
-  while (ui.IsRunning()) {
-    app.Refresh();
-    std::this_thread::sleep_for(std::chrono::milliseconds(PollFreqMs));
-  }
-}
-
-extern void MeshHeightMap();
-extern void MapDrawingToThickness();
-extern void TestSDF();
-
-extern void SaveVolMesh();
+#include "Array2D.h"
+#include "Vec4.h"
 
 int main(int argc, char** argv) {
-  // RunCanvasApp();
-  // RunInflateApp();
-  // RunPackApp();
-  // VoxApp();
-  //RunHeadApp();
-  //MeshHeightMap();
-  //MapDrawingToThickness();
-  TestSDF();
-   //SaveVolMesh();
+  UILib ui;
+  UILib* _ui = &ui;
+  _ui->SetShowImage(true);
+
+  Array2D<Vec4b> _canvas;
+  _canvas.Allocate(800, 800);
+  _canvas.Fill(Vec4b(127, 127, 0, 127));
+  int _imageId = _ui->AddImage();
+  _ui->SetImageData(_imageId, _canvas);
+  _ui->AddButton("Run", [&] {
+
+    });
+  _ui->AddButton("One Step", [&] {  });
+  _ui->AddButton("Stop", [&] {  });
+  _ui->AddButton("Snap Pic", [&] {  });
+  std::shared_ptr<InputInt> numStepsInput =
+    std::make_shared<InputInt>("#steps", 100);
+  int _numStepsId = _ui->AddWidget(numStepsInput);
+  int _numLabelId = _ui->AddLabel("num: ");
+  _ui->SetChangeDirCb([&](const std::string& dir) {  });
+  int _statusLabel = _ui->AddLabel("status");
+
+  ui.SetFontsDir("./fonts");
+
+  int statusLabel = ui.AddLabel("status");
+
+  ui.Run();
+
+  const unsigned PollFreqMs = 20;
+
+  while (ui.IsRunning()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(PollFreqMs));
+  }
   return 0;
 }
